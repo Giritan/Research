@@ -16,12 +16,12 @@ x_range = (0, 100)      # x軸
 y_range = (0, 100)      # y軸
 node_x_range = (10, 90) # ノード用x軸
 node_y_range = (10, 90) # ノード用y軸
-min_distance = 5       # ノード間の最小距離
-radius = 10             # ノードを中心とした円の半径(接続半径)
+min_distance = 10       # ノード間の最小距離
+radius = [7, 15]             # ノードを中心とした円の半径(接続半径)
 multiple = 2            # 円の面積の倍数(√n * pi * r^2)
 outputdir_image = "simulation_image" #imageの保存先
 outputdir_gif = "simulation_gif"     #gifの保存先
-plot_pattern = 0
+plot_pattern = 1
 #0の時は途中経過をgifで表示、1の時は最終結果だけを画像で表示
 
 
@@ -34,7 +34,7 @@ class setting:
         self.y_range = y_range                   # y軸
         self.positions = {}                      # ノードの位置配列
         self.G = nx.Graph()                      # グラフの生成
-        self.radius = np.sqrt(multiple) * radius # 接続半径
+        self.radius = {}                        #各ノード半径を格納する配列
         self.circles = {}                        # 各ノードの円の格納配列
         self.outputdir_image = outputdir_image               # 出力画像の保存先
         self.outputdir_gif = outputdir_gif               # 出力画像の保存先
@@ -55,7 +55,12 @@ class setting:
 
         #生成済みのノードの円の描画の準備
         for node_id, (x, y) in self.positions.items():
-            circle = patches.Circle((x, y), radius=self.radius, edgecolor='blue', linestyle='dotted', fill=False)
+            self.radius[node_id] = np.random.default_rng().uniform(radius[0], radius[1])
+            circle = patches.Circle((x, y), 
+                                    radius=self.radius[node_id], 
+                                    edgecolor='blue', 
+                                    linestyle='dotted', 
+                                    fill=False)
             self.circles[node_id] = circle
             self.ax.add_patch(circle)
             circle.set_visible(False)
@@ -118,7 +123,7 @@ class setting:
             if node_id != parent_node:  # 自分自身は除く
                 child_pos = np.array(pos)
                 distance = np.linalg.norm(parent_pos - child_pos)
-                if distance <= self.radius:
+                if distance <= self.radius[node_id]:
                     children_in_radius.append((node_id, distance))
         
         # 距離でソートし、ノード ID だけのリストに変換
@@ -280,7 +285,8 @@ if __name__ == "__main__":
                  node_x_range, 
                  node_y_range, 
                  min_distance, 
-                 radius, multiple, 
+                 radius, 
+                 multiple, 
                  outputdir_image, 
                  outputdir_gif)
     basic.show_aodv()
