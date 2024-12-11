@@ -19,9 +19,9 @@ node_y_range = (10, 90) # ノード用y軸
 min_distance = 5       # ノード間の最小距離
 radius = 10             # ノードを中心とした円の半径(接続半径)
 multiple = 2            # 円の面積の倍数(√n * pi * r^2)
-outputdir_image = "simulation_image" # 出力画像の保存先
-outputdir_gif = 'simulation_gif'
-plot_pattern = 1
+outputdir_image = "simulation_image" #imageの保存先
+outputdir_gif = "simulation_gif"     #gifの保存先
+plot_pattern = 0
 #0の時は途中経過をgifで表示、1の時は最終結果だけを画像で表示
 
 
