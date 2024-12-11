@@ -20,7 +20,7 @@ min_distance = 5       # ノード間の最小距離
 radius = 10             # ノードを中心とした円の半径(接続半径)
 multiple = 2            # 円の面積の倍数(√n * pi * r^2)
 outputdir_image = "simulation_image" # 出力画像の保存先
-outputdir_gif = '/Users/suehirohayato/Desktop/Takasaki_Laboratory/graduation_research/program/simulation_gif/simulation.gif'
+outputdir_gif = 'simulation_gif'
 plot_pattern = 1
 #0の時は途中経過をgifで表示、1の時は最終結果だけを画像で表示
 
