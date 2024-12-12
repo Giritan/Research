@@ -23,15 +23,19 @@ outputdir_image = "simulation_image" #imageの保存先
 outputdir_gif = "simulation_gif"     #gifの保存先
 plot_pattern = 1    #0の時は途中経過をgifで表示、1の時は最終結果だけを画像で表示
 num_div = 2        #セルの分割数
+dist = 2        #移動距離
+rand_dist = (0, 1)  #移動距離用の乱数
 
 
 class setting:
-    def __init__(self, plot_pattern, num_nodes, x_range, y_range, node_x_range, node_y_range, min_distance, radius, multiple, outputdir_image, outputdir_gif, num_div):
+    def __init__(self, plot_pattern, num_nodes, x_range, y_range, node_x_range, node_y_range, min_distance, radius, multiple, outputdir_image, outputdir_gif, num_div, dist, rand_dist):
         print(f"Initializing Setting...")
         #変数の初期化
         self.num_nodes = num_nodes               # ノード数
         self.x_range = x_range                   # x軸
         self.y_range = y_range                   # y軸
+        self.node_x_range = node_x_range         #ノードのx軸
+        self.node_y_range = node_y_range         #ノードのy軸
         self.positions = {}                      # ノードの位置配列
         self.G = nx.Graph()                      # グラフの生成
         # self.radius = {}                        #各ノードの半径をランダムに決め格納する配列
@@ -42,6 +46,8 @@ class setting:
         self.fig, self.ax = plt.subplots(figsize = (7, 7))
         self.plot_pattern = plot_pattern
         self.num_div = num_div
+        self.dist = dist
+        self.rand_dist = rand_dist
         
         #ノードの配置
         for i in range(self.num_nodes):
@@ -133,6 +139,18 @@ class setting:
         children_sort = sorted(children_in_radius, key=lambda x: x[1], reverse=False)
         child_node_ids = [node_id for node_id, _ in children_sort]  # IDのみ抽出
         return child_node_ids
+    
+    # ノードをランダムに動かす
+    def move(self):
+        rand = np.random.default_rng().uniform(self.rand_dist[0], self.rand_dist[1])
+        for node_id, (x, y) in self.positions.items():
+            move_x = self.dist * rand + x
+            move_y = self.dist * rand + y
+            if not (self.node_x_range[0] <= move_x and self.node_x_range >= move_x):
+                move_x = x
+            if not (self.node_y_range[0] <= move_y and self.node_y_range >= move_y):
+                move_y = y
+            self.positions[node_id] = (move_x, move_y)
 
     # 現在の状態を保存
     def save_image(self, frame_index = None):
@@ -240,8 +258,8 @@ class setting:
 
 
 class AODV(setting):
-    def __init__(self, plot_pattern, num_nodes, x_range, y_range, node_x_range, node_y_range, min_distance, radius, multiple, outputdir_image, outputdir_gif, num_div):
-        super().__init__(plot_pattern, num_nodes, x_range, y_range, node_x_range, node_y_range, min_distance, radius, multiple, outputdir_image, outputdir_gif, num_div)
+    def __init__(self, plot_pattern, num_nodes, x_range, y_range, node_x_range, node_y_range, min_distance, radius, multiple, outputdir_image, outputdir_gif, num_div, dist, rand_dist):
+        super().__init__(plot_pattern, num_nodes, x_range, y_range, node_x_range, node_y_range, min_distance, radius, multiple, outputdir_image, outputdir_gif, num_div, dist, rand_dist)
         print(f"Initializing AODV...")
         self.current = 0  #通信要求出すノード
         self.target_node = np.random.choice(list(self.positions.keys()))  # 捜索対象
@@ -293,5 +311,7 @@ if __name__ == "__main__":
                  multiple, 
                  outputdir_image, 
                  outputdir_gif,
-                 num_div)
+                 num_div,
+                 dist,
+                 rand_dist)
     basic.show_aodv()
