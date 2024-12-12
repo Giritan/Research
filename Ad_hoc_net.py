@@ -21,12 +21,12 @@ radius = 10             # ノードを中心とした円の半径(接続半径)
 multiple = 2            # 円の面積の倍数(√n * pi * r^2)
 outputdir_image = "simulation_image" #imageの保存先
 outputdir_gif = "simulation_gif"     #gifの保存先
-plot_pattern = 1
-#0の時は途中経過をgifで表示、1の時は最終結果だけを画像で表示
+plot_pattern = 1    #0の時は途中経過をgifで表示、1の時は最終結果だけを画像で表示
+num_div = 2        #セルの分割数
 
 
 class setting:
-    def __init__(self, plot_pattern, num_nodes, x_range, y_range, node_x_range, node_y_range, min_distance, radius, multiple, outputdir_image, outputdir_gif):
+    def __init__(self, plot_pattern, num_nodes, x_range, y_range, node_x_range, node_y_range, min_distance, radius, multiple, outputdir_image, outputdir_gif, num_div):
         print(f"Initializing Setting...")
         #変数の初期化
         self.num_nodes = num_nodes               # ノード数
@@ -35,12 +35,13 @@ class setting:
         self.positions = {}                      # ノードの位置配列
         self.G = nx.Graph()                      # グラフの生成
         # self.radius = {}                        #各ノードの半径をランダムに決め格納する配列
-        self.radius = radius                        #各ノード半径を格納する配列
+        self.radius = np.sqrt(multiple) * radius                        #各ノード半径を格納する配列
         self.circles = {}                        # 各ノードの円の格納配列
         self.outputdir_image = outputdir_image               # 出力画像の保存先
         self.outputdir_gif = outputdir_gif               # 出力画像の保存先
         self.fig, self.ax = plt.subplots(figsize = (7, 7))
         self.plot_pattern = plot_pattern
+        self.num_div = num_div
         
         #ノードの配置
         for i in range(self.num_nodes):
@@ -124,7 +125,7 @@ class setting:
             if node_id != parent_node:  # 自分自身は除く
                 child_pos = np.array(pos)
                 distance = np.linalg.norm(parent_pos - child_pos)
-                if distance <= self.radius[node_id]:
+                if distance <= self.radius:
                     children_in_radius.append((node_id, distance))
         
         # 距離でソートし、ノード ID だけのリストに変換
@@ -153,10 +154,11 @@ class setting:
 
     #グラフの描画
     def draw_graph(self):
+        div_steps = self.x_range[1]/self.num_div
         self.ax.set_xlim(self.x_range)
         self.ax.set_ylim(self.y_range)
-        self.ax.set_xticks(np.arange(0, 101, step=10))
-        self.ax.set_yticks(np.arange(0, 101, step=10))
+        self.ax.set_xticks(np.arange(self.x_range[0], self.x_range[1], step=div_steps))
+        self.ax.set_yticks(np.arange(self.y_range[0], self.y_range[1], step=div_steps))
         self.ax.grid(True, linestyle='--', linewidth=0.5, zorder=0)  # 罫線を表示
         self.ax.set_xlabel("X軸")
         self.ax.set_ylabel("Y軸", labelpad=15, rotation="horizontal")
@@ -164,8 +166,9 @@ class setting:
 
     #ノード・エッジ・ラベルの描画
     def draw(self):
+        node_size = 200
         self.draw_graph()
-        nx.draw_networkx_nodes(self.G, pos=self.positions, node_color='lightblue', node_size=300, ax=self.ax)
+        nx.draw_networkx_nodes(self.G, pos=self.positions, node_color='lightblue', node_size=node_size, ax=self.ax)
         nx.draw_networkx_edges(self.G, pos=self.positions, edge_color='gray', ax=self.ax)
         nx.draw_networkx_labels(self.G, pos=self.positions, font_color='black', ax=self.ax)
 
@@ -237,8 +240,8 @@ class setting:
 
 
 class AODV(setting):
-    def __init__(self, plot_pattern, num_nodes, x_range, y_range, node_x_range, node_y_range, min_distance, radius, multiple, outputdir_image, outputdir_gif):
-        super().__init__(plot_pattern, num_nodes, x_range, y_range, node_x_range, node_y_range, min_distance, radius, multiple, outputdir_image, outputdir_gif)
+    def __init__(self, plot_pattern, num_nodes, x_range, y_range, node_x_range, node_y_range, min_distance, radius, multiple, outputdir_image, outputdir_gif, num_div):
+        super().__init__(plot_pattern, num_nodes, x_range, y_range, node_x_range, node_y_range, min_distance, radius, multiple, outputdir_image, outputdir_gif, num_div)
         print(f"Initializing AODV...")
         self.current = 0  #通信要求出すノード
         self.target_node = np.random.choice(list(self.positions.keys()))  # 捜索対象
@@ -289,5 +292,6 @@ if __name__ == "__main__":
                  radius, 
                  multiple, 
                  outputdir_image, 
-                 outputdir_gif)
+                 outputdir_gif,
+                 num_div)
     basic.show_aodv()
