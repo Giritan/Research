@@ -17,7 +17,7 @@ y_range = (0, 100)      # y軸
 node_x_range = (10, 90) # ノード用x軸
 node_y_range = (10, 90) # ノード用y軸
 min_distance = 10       # ノード間の最小距離
-radius = [7, 15]             # ノードを中心とした円の半径(接続半径)
+radius = 10             # ノードを中心とした円の半径(接続半径)
 multiple = 2            # 円の面積の倍数(√n * pi * r^2)
 outputdir_image = "simulation_image" #imageの保存先
 outputdir_gif = "simulation_gif"     #gifの保存先
@@ -34,7 +34,8 @@ class setting:
         self.y_range = y_range                   # y軸
         self.positions = {}                      # ノードの位置配列
         self.G = nx.Graph()                      # グラフの生成
-        self.radius = {}                        #各ノード半径を格納する配列
+        # self.radius = {}                        #各ノードの半径をランダムに決め格納する配列
+        self.radius = radius                        #各ノード半径を格納する配列
         self.circles = {}                        # 各ノードの円の格納配列
         self.outputdir_image = outputdir_image               # 出力画像の保存先
         self.outputdir_gif = outputdir_gif               # 出力画像の保存先
@@ -55,9 +56,9 @@ class setting:
 
         #生成済みのノードの円の描画の準備
         for node_id, (x, y) in self.positions.items():
-            self.radius[node_id] = np.random.default_rng().uniform(radius[0], radius[1])
+            # self.radius[node_id] = np.random.default_rng().uniform(radius[0], radius[1])
             circle = patches.Circle((x, y), 
-                                    radius=self.radius[node_id], 
+                                    radius=self.radius, 
                                     edgecolor='blue', 
                                     linestyle='dotted', 
                                     fill=False)
