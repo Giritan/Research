@@ -21,10 +21,11 @@ radius = 10             # ノードを中心とした円の半径(接続半径)
 multiple = 2            # 円の面積の倍数(√n * pi * r^2)
 outputdir_image = "simulation_image" #imageの保存先
 outputdir_gif = "simulation_gif"     #gifの保存先
-plot_pattern = 1    #0の時は途中経過をgifで表示、1の時は最終結果だけを画像で表示
+#0の時は途中経過をgifで表示、1の時は最終結果だけを画像で表示, 2の時はノードの移動を表示
+plot_pattern = 0
 num_div = 2        #セルの分割数
 dist = 2        #移動距離
-rand_dist = (0, 1)  #移動距離用の乱数
+rand_dist = (-1, 1)  #移動距離用の乱数
 
 
 class setting:
@@ -140,17 +141,37 @@ class setting:
         child_node_ids = [node_id for node_id, _ in children_sort]  # IDのみ抽出
         return child_node_ids
     
+    # 現在のプロットを全て消去
+    def clear_plot(self):
+        for circle in self.circles.values():
+            circle.remove()
+        self.circles.clear()
+        
+        for edge in self.ax.collection:
+            edge.remove()
+        self.ax.collections.clear()
+
+
     # ノードをランダムに動かす
     def move(self):
+        self.clear_plot()
         rand = np.random.default_rng().uniform(self.rand_dist[0], self.rand_dist[1])
         for node_id, (x, y) in self.positions.items():
             move_x = self.dist * rand + x
             move_y = self.dist * rand + y
-            if not (self.node_x_range[0] <= move_x and self.node_x_range >= move_x):
-                move_x = x
-            if not (self.node_y_range[0] <= move_y and self.node_y_range >= move_y):
-                move_y = y
+            move_x = max(self.node_x_range[0], min(self.node_x_range[1], move_x))
+            move_y = max(self.node_y_range[0], min(self.node_y_range[1], move_y))
             self.positions[node_id] = (move_x, move_y)
+
+        #ノードの再描画
+        self.plot_node()
+
+        #エッジの再描画
+        seen_routes = set() #重複した内容は格納されない 
+        for _, (node_id_1, node_id_2) in self.routing.items():
+            if (node_id_1, node_id_2) not in seen_routes:
+                self.plot_edge(node_id_1, node_id_2)
+                seen_routes.add(node_id_1, node_id_2)
 
     # 現在の状態を保存
     def save_image(self, frame_index = None):
@@ -212,7 +233,6 @@ class setting:
         image_files = []
 
         if self.plot_pattern == 0:
-            # self.draw_graph() #必要なのか？
             for parent_node in range(self.num_nodes):
                 self.taggle_circle(parent_node, True)  # 円の表示
                 self.draw()
@@ -230,11 +250,11 @@ class setting:
                 self.draw()
                 image_files.append(self.save_image(frame_index))
                 frame_index += 1
+                self.move()
 
             self.generate_gif(image_files)
 
         elif self.plot_pattern == 1:
-            # self.draw_graph() #必要なのか？
             for parent_node in range(self.num_nodes):
                 child_node = self.circle_detection(parent_node)
                 for node_id in child_node:
@@ -242,8 +262,6 @@ class setting:
                     self.update_routing(node_id, parent_node)
                     self.draw()
             self.save_image()
-            
-
 
     # 全体の描画 ノード0から順に円内にいるノードと接続を開始する
     def show(self):
