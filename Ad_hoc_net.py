@@ -22,7 +22,7 @@ multiple = 2            # 円の面積の倍数(√n * pi * r^2)
 outputdir_image = "simulation_image" #imageの保存先
 outputdir_gif = "simulation_gif"     #gifの保存先
 #0の時は途中経過をgifで表示、1の時は最終結果だけを画像で表示, 2の時はノードの移動を表示
-plot_pattern = 0
+plot_pattern = 2
 num_div = 2        #セルの分割数
 dist = 2        #移動距離
 rand_dist = (-1, 1)  #移動距離用の乱数
@@ -61,9 +61,12 @@ class setting:
 
         
         self.routing = {i: [] for i in self.positions}
+        self.generate_circle()
 
-        #生成済みのノードの円の描画の準備
+    #生成済みのノードの円の描画の準備
+    def generate_circle(self):
         for node_id, (x, y) in self.positions.items():
+            #接続円をランダムに決める↓
             # self.radius[node_id] = np.random.default_rng().uniform(radius[0], radius[1])
             circle = patches.Circle((x, y), 
                                     radius=self.radius, 
@@ -143,39 +146,42 @@ class setting:
     
     # 現在のプロットを全て消去
     def clear_plot(self):
+        self.G.clear()
+        self.ax.cla()
         for circle in self.circles.values():
             circle.remove()
         self.circles.clear()
-        
-        for edge in self.ax.collection:
-            edge.remove()
-        self.ax.collections.clear()
-
 
     # ノードをランダムに動かす
     def move(self):
+        #描画されているサークルとエッジを消去する
         self.clear_plot()
-        rand = np.random.default_rng().uniform(self.rand_dist[0], self.rand_dist[1])
+        #ランダムな方向にノードを動かす
         for node_id, (x, y) in self.positions.items():
-            move_x = self.dist * rand + x
-            move_y = self.dist * rand + y
+            rand_x = np.random.default_rng().uniform(self.rand_dist[0], self.rand_dist[1])
+            rand_y = np.random.default_rng().uniform(self.rand_dist[0], self.rand_dist[1])
+            move_x = self.dist * rand_x + x
+            move_y = self.dist * rand_y + y
             move_x = max(self.node_x_range[0], min(self.node_x_range[1], move_x))
             move_y = max(self.node_y_range[0], min(self.node_y_range[1], move_y))
             self.positions[node_id] = (move_x, move_y)
-
+        #円のサークル再描画
+        self.generate_circle()
         #ノードの再描画
         self.plot_node()
-
         #エッジの再描画
         seen_routes = set() #重複した内容は格納されない 
-        for _, (node_id_1, node_id_2) in self.routing.items():
-            if (node_id_1, node_id_2) not in seen_routes:
-                self.plot_edge(node_id_1, node_id_2)
-                seen_routes.add(node_id_1, node_id_2)
+        for _, node_pare in self.routing.items():
+            for node_id in node_pare:
+                node_id_1, node_id_2 = node_id
+                route = tuple([node_id_1, node_id_2])
+                if route not in seen_routes:
+                    self.plot_edge(node_id_1, node_id_2)
+                    seen_routes.add(route)
 
     # 現在の状態を保存
     def save_image(self, frame_index = None):
-        if self.plot_pattern == 0:
+        if self.plot_pattern == 0 or self.plot_pattern == 2:
             image_filename = os.path.join(self.outputdir_image, f"simulation_{frame_index}.png")
         elif self.plot_pattern == 1 and frame_index is None:
             image_filename = os.path.join(self.outputdir_image, f"simulation_result.png")
@@ -262,6 +268,15 @@ class setting:
                     self.update_routing(node_id, parent_node)
                     self.draw()
             self.save_image()
+
+        elif self.plot_pattern == 2:
+            for parent_node in range(self.num_nodes):
+                self.draw()
+                image_files.append(self.save_image(frame_index))
+                frame_index += 1
+                self.move()
+
+            self.generate_gif(image_files)
 
     # 全体の描画 ノード0から順に円内にいるノードと接続を開始する
     def show(self):
