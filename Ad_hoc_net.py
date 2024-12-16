@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-import japanize_matplotlib
+import matplotlib_fontja
 import networkx as nx
 import numpy as np
 from PIL import Image
@@ -12,18 +12,22 @@ from typing import Any, List, Tuple
 from numpy.typing import NDArray
 
 # パラメータ
-num_nodes = 20  # ノード数
+num_nodes = 30  # ノード数
 x_range = (0, 100)  # x軸
 y_range = (0, 100)  # y軸
 node_x_range = (10, 90)  # ノード用x軸
 node_y_range = (10, 90)  # ノード用y軸
-min_distance = 10  # ノード間の最小距離
+min_distance = 1  # ノード間の最小距離
 radius = 10  # ノードを中心とした円の半径(接続半径)
 multiple = 2  # 円の面積の倍数(√n * pi * r^2)
 outputdir_image = "simulation_image"  # imageの保存先
 outputdir_gif = "simulation_gif"  # gifの保存先
-plot_pattern = 1
-# 0の時は途中経過をgifで表示、1の時は最終結果だけを画像で表示
+# 0の時は途中経過をgifで表示、1の時は最終結果だけを画像で表示, 2の時はノードの移動を表示
+plot_pattern = 0
+num_div = 2  # セルの分割数
+dist = 3  # 移動距離
+rand_dist = (-1, 1)  # 移動距離用の乱数
+freq = (0, 1)  # 各ノードの通信頻度 0~1
 
 
 class setting:
@@ -40,21 +44,30 @@ class setting:
         multiple,
         outputdir_image,
         outputdir_gif,
+        num_div,
+        dist,
+        rand_dist,
     ):
         print(f"Initializing Setting...")
         # 変数の初期化
         self.num_nodes = num_nodes  # ノード数
         self.x_range = x_range  # x軸
         self.y_range = y_range  # y軸
+        self.node_x_range = node_x_range  # ノードのx軸
+        self.node_y_range = node_y_range  # ノードのy軸
         self.positions = {}  # ノードの位置配列
         self.G = nx.Graph()  # グラフの生成
         # self.radius = {}                        #各ノードの半径をランダムに決め格納する配列
-        self.radius = radius  # 各ノード半径を格納する配列
+        self.radius = np.sqrt(multiple) * radius  # 各ノード半径を格納する配列
         self.circles = {}  # 各ノードの円の格納配列
         self.outputdir_image = outputdir_image  # 出力画像の保存先
         self.outputdir_gif = outputdir_gif  # 出力画像の保存先
         self.fig, self.ax = plt.subplots(figsize=(7, 7))
         self.plot_pattern = plot_pattern
+        self.num_div = num_div
+        self.dist = dist
+        self.rand_dist = rand_dist
+        self.freq = freq
 
         # ノードの配置
         for i in range(self.num_nodes):
@@ -71,9 +84,12 @@ class setting:
                     break
 
         self.routing = {i: [] for i in self.positions}
+        self.generate_circle()
 
-        # 生成済みのノードの円の描画の準備
+    # 生成済みのノードの円の描画の準備
+    def generate_circle(self):
         for node_id, (x, y) in self.positions.items():
+            # 接続円をランダムに決める↓
             # self.radius[node_id] = np.random.default_rng().uniform(radius[0], radius[1])
             circle = patches.Circle(
                 (x, y),
@@ -150,7 +166,7 @@ class setting:
             if node_id != parent_node:  # 自分自身は除く
                 child_pos = np.array(pos)
                 distance = np.linalg.norm(parent_pos - child_pos)
-                if distance <= self.radius[node_id]:
+                if distance <= self.radius:
                     children_in_radius.append((node_id, distance))
 
         # 距離でソートし、ノード ID だけのリストに変換
@@ -159,16 +175,51 @@ class setting:
         child_node_ids = [node_id for node_id, _ in children_sort]  # IDのみ抽出
         return child_node_ids
 
+    # 現在のプロットを全て消去
+    def clear_plot(self):
+        self.G.clear()
+        self.ax.cla()
+        self.circles.clear()
+
+    # ノードをランダムに動かす
+    def move(self):
+        # 描画されているサークルとエッジを消去する
+        self.clear_plot()
+        # ランダムな方向にノードを動かす
+        for node_id, (x, y) in self.positions.items():
+            rand_x = np.random.default_rng().uniform(
+                self.rand_dist[0], self.rand_dist[1]
+            )
+            rand_y = np.random.default_rng().uniform(
+                self.rand_dist[0], self.rand_dist[1]
+            )
+            move_x = self.dist * rand_x + x
+            move_y = self.dist * rand_y + y
+            move_x = max(self.node_x_range[0], min(self.node_x_range[1], move_x))
+            move_y = max(self.node_y_range[0], min(self.node_y_range[1], move_y))
+            self.positions[node_id] = (move_x, move_y)
+        # 円のサークル再描画
+        self.generate_circle()
+        # ノードの再描画
+        self.plot_node()
+        # エッジの再描画
+        seen_routes = set()  # 重複した内容は格納されない
+        for _, node_pare in self.routing.items():
+            for node_id in node_pare:
+                node_id_1, node_id_2 = node_id
+                route = tuple([node_id_1, node_id_2])
+                if route not in seen_routes:
+                    self.plot_edge(node_id_1, node_id_2)
+                    seen_routes.add(route)
+
     # 現在の状態を保存
     def save_image(self, frame_index=None):
-        if self.plot_pattern == 0:
+        if self.plot_pattern == 0 or self.plot_pattern == 2:
             image_filename = os.path.join(
                 self.outputdir_image, f"simulation_{frame_index}.png"
             )
         elif self.plot_pattern == 1 and frame_index is None:
-            image_filename = os.path.join(
-                self.outputdir_image, f"simulation_result.png"
-            )
+            image_filename = os.path.join(self.outputdir_gif, f"simulation_result.png")
         self.fig.savefig(image_filename, bbox_inches="tight")
         return image_filename
 
@@ -177,16 +228,17 @@ class setting:
         images = [Image.open(img_file) for img_file in image_files]
         gif_filename = os.path.join(self.outputdir_gif, "simulation.gif")
         images[0].save(
-            gif_filename, save_all=True, append_images=images[1:], duration=200, loop=1
+            gif_filename, save_all=True, append_images=images[1:], duration=200
         )
         # print(f"GIF saved as {gif_filename}")
 
     # グラフの描画
     def draw_graph(self):
+        div_steps = self.x_range[1] / self.num_div
         self.ax.set_xlim(self.x_range)
         self.ax.set_ylim(self.y_range)
-        self.ax.set_xticks(np.arange(0, 101, step=10))
-        self.ax.set_yticks(np.arange(0, 101, step=10))
+        self.ax.set_xticks(np.arange(self.x_range[0], self.x_range[1], step=div_steps))
+        self.ax.set_yticks(np.arange(self.y_range[0], self.y_range[1], step=div_steps))
         self.ax.grid(True, linestyle="--", linewidth=0.5, zorder=0)  # 罫線を表示
         self.ax.set_xlabel("X軸")
         self.ax.set_ylabel("Y軸", labelpad=15, rotation="horizontal")
@@ -194,12 +246,13 @@ class setting:
 
     # ノード・エッジ・ラベルの描画
     def draw(self):
+        node_size = 200
         self.draw_graph()
         nx.draw_networkx_nodes(
             self.G,
             pos=self.positions,
             node_color="lightblue",
-            node_size=300,
+            node_size=node_size,
             ax=self.ax,
         )
         nx.draw_networkx_edges(
@@ -231,7 +284,6 @@ class setting:
         image_files = []
 
         if self.plot_pattern == 0:
-            # self.draw_graph() #必要なのか？
             for parent_node in range(self.num_nodes):
                 self.taggle_circle(parent_node, True)  # 円の表示
                 self.draw()
@@ -249,18 +301,28 @@ class setting:
                 self.draw()
                 image_files.append(self.save_image(frame_index))
                 frame_index += 1
+                self.move()
 
             self.generate_gif(image_files)
 
         elif self.plot_pattern == 1:
-            # self.draw_graph() #必要なのか？
             for parent_node in range(self.num_nodes):
                 child_node = self.circle_detection(parent_node)
                 for node_id in child_node:
                     self.plot_edge(parent_node, node_id)
                     self.update_routing(node_id, parent_node)
-                    self.draw()
-            self.save_image()
+                self.draw()
+                self.save_image()
+                self.move()
+
+        elif self.plot_pattern == 2:
+            for parent_node in range(self.num_nodes):
+                self.draw()
+                image_files.append(self.save_image(frame_index))
+                frame_index += 1
+                self.move()
+
+            self.generate_gif(image_files)
 
     # 全体の描画 ノード0から順に円内にいるノードと接続を開始する
     def show(self):
@@ -288,6 +350,9 @@ class AODV(setting):
         multiple,
         outputdir_image,
         outputdir_gif,
+        num_div,
+        dist,
+        rand_dist,
     ):
         super().__init__(
             plot_pattern,
@@ -301,6 +366,9 @@ class AODV(setting):
             multiple,
             outputdir_image,
             outputdir_gif,
+            num_div,
+            dist,
+            rand_dist,
         )
         print(f"Initializing AODV...")
         self.current = 0  # 通信要求出すノード
@@ -355,5 +423,8 @@ if __name__ == "__main__":
         multiple,
         outputdir_image,
         outputdir_gif,
+        num_div,
+        dist,
+        rand_dist,
     )
     basic.show_aodv()
