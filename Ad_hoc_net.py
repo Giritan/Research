@@ -12,7 +12,7 @@ from typing import Any, List, Tuple
 from numpy.typing import NDArray
 
 # パラメータ
-num_nodes = 30  # ノード数
+num_nodes = 20  # ノード数
 x_range = (0, 100)  # x軸
 y_range = (0, 100)  # y軸
 node_x_range = (10, 90)  # ノード用x軸
@@ -23,7 +23,7 @@ multiple = 2  # 円の面積の倍数(√n * pi * r^2)
 outputdir_image = "simulation_image"  # imageの保存先
 outputdir_gif = "simulation_gif"  # gifの保存先
 # 0の時は途中経過をgifで表示、1の時は最終結果だけを画像で表示, 2の時はノードの移動を表示
-plot_pattern = 0
+plot_pattern = 1
 num_div = 2  # セルの分割数
 dist = 3  # 移動距離
 rand_dist = (-1, 1)  # 移動距離用の乱数
@@ -68,6 +68,7 @@ class setting:
         self.dist = dist
         self.rand_dist = rand_dist
         self.freq = freq
+        self.exposed_count = {i: None for i in self.positions}  # さらし端末カウンタ
 
         # ノードの配置
         for i in range(self.num_nodes):
@@ -173,6 +174,7 @@ class setting:
         # reverse = falseの時 昇順(近い順)/ trueの時 降順(遠い順)
         children_sort = sorted(children_in_radius, key=lambda x: x[1], reverse=False)
         child_node_ids = [node_id for node_id, _ in children_sort]  # IDのみ抽出
+        self.exposed_count[parent_node] = len(child_node_ids)
         return child_node_ids
 
     # 現在のプロットを全て消去
@@ -330,9 +332,12 @@ class setting:
         self.plot_node()
         self.drawing_connections()
 
+        # for i in self.positions:
+        #     print(f"{i}: {self.exposed_count[i]}")
+
         # 最終的なself.routingの内容を表示
         for i in self.positions:
-            print(f"({i}: {self.routing[i]})")
+            print(f"({i}:{self.exposed_count[i]}: {self.routing[i]})")
         # plt.show()
 
 
