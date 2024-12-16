@@ -11,25 +11,26 @@ from typing import Any, List, Tuple
 from numpy.typing import NDArray
 
 #パラメータ
-num_nodes = 20          # ノード数
+num_nodes = 30          # ノード数
 x_range = (0, 100)      # x軸
 y_range = (0, 100)      # y軸
 node_x_range = (10, 90) # ノード用x軸
 node_y_range = (10, 90) # ノード用y軸
-min_distance = 10       # ノード間の最小距離
+min_distance = 1       # ノード間の最小距離
 radius = 10             # ノードを中心とした円の半径(接続半径)
 multiple = 2            # 円の面積の倍数(√n * pi * r^2)
 outputdir_image = "simulation_image" #imageの保存先
 outputdir_gif = "simulation_gif"     #gifの保存先
 #0の時は途中経過をgifで表示、1の時は最終結果だけを画像で表示, 2の時はノードの移動を表示
-plot_pattern = 2
+plot_pattern = 1
 num_div = 2        #セルの分割数
-dist = 2        #移動距離
+dist = 3        #移動距離
 rand_dist = (-1, 1)  #移動距離用の乱数
+freq = (0, 1)   #各ノードの通信頻度 0~1
 
 
 class setting:
-    def __init__(self, plot_pattern, num_nodes, x_range, y_range, node_x_range, node_y_range, min_distance, radius, multiple, outputdir_image, outputdir_gif, num_div, dist, rand_dist):
+    def __init__(self, plot_pattern, num_nodes, x_range, y_range, node_x_range, node_y_range, min_distance, radius, multiple, outputdir_image, outputdir_gif, num_div, dist, rand_dist, freq):
         print(f"Initializing Setting...")
         #変数の初期化
         self.num_nodes = num_nodes               # ノード数
@@ -49,6 +50,7 @@ class setting:
         self.num_div = num_div
         self.dist = dist
         self.rand_dist = rand_dist
+        self.freq = freq
         
         #ノードの配置
         for i in range(self.num_nodes):
@@ -193,7 +195,7 @@ class setting:
         images = [Image.open(img_file) for img_file in image_files]
         gif_filename = os.path.join(self.outputdir_gif, "simulation.gif")
         images[0].save(
-            gif_filename, save_all=True, append_images=images[1:], duration=200, loop=1
+            gif_filename, save_all=True, append_images=images[1:], duration=200, loop=False
         )
         # print(f"GIF saved as {gif_filename}")
 
@@ -266,8 +268,9 @@ class setting:
                 for node_id in child_node:
                     self.plot_edge(parent_node, node_id)
                     self.update_routing(node_id, parent_node)
-                    self.draw()
-            self.save_image()
+                self.draw()
+                self.save_image()
+                self.move()
 
         elif self.plot_pattern == 2:
             for parent_node in range(self.num_nodes):
