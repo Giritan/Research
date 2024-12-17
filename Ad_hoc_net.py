@@ -13,69 +13,52 @@ from numpy.typing import NDArray
 
 # パラメータ
 num_nodes = 20  # ノード数
-x_range = (0, 100)  # x軸
-y_range = (0, 100)  # y軸
-node_x_range = (10, 90)  # ノード用x軸
-node_y_range = (10, 90)  # ノード用y軸
 min_distance = 1  # ノード間の最小距離
 radius = 10  # ノードを中心とした円の半径(接続半径)
 multiple = 2  # 円の面積の倍数(√n * pi * r^2)
-outputdir_image = "simulation_image"  # imageの保存先
-outputdir_gif = "simulation_gif"  # gifの保存先
+
 # 0の時は途中経過をgifで表示、1の時は最終結果だけを画像で表示, 2の時はノードの移動を表示
 plot_pattern = 1
-num_div = 2  # セルの分割数
+num_div = 5  # セルの分割数
 dist = 3  # 移動距離
-rand_dist = (-1, 1)  # 移動距離用の乱数
-freq = (0, 1)  # 各ノードの通信頻度 0~1
+iterations = 100  # シミュレーション回数
 
 
 class setting:
+    # 固定変数
+    x_range = (0, 100)  # x軸
+    y_range = (0, 100)  # y軸
+    node_x_range = (10, 90)  # ノード用x軸
+    node_y_range = (10, 90)  # ノード用y軸
+    outputdir_image = "simulation_image"  # imageの保存先
+    outputdir_gif = "simulation_gif"  # gifの保存先
+
     def __init__(
-        self,
-        plot_pattern,
-        num_nodes,
-        x_range,
-        y_range,
-        node_x_range,
-        node_y_range,
-        min_distance,
-        radius,
-        multiple,
-        outputdir_image,
-        outputdir_gif,
-        num_div,
-        dist,
-        rand_dist,
+        self, plot_pattern, num_nodes, min_distance, radius, multiple, num_div, dist
     ):
         print(f"Initializing Setting...")
         # 変数の初期化
         self.num_nodes = num_nodes  # ノード数
-        self.x_range = x_range  # x軸
-        self.y_range = y_range  # y軸
-        self.node_x_range = node_x_range  # ノードのx軸
-        self.node_y_range = node_y_range  # ノードのy軸
         self.positions = {}  # ノードの位置配列
         self.G = nx.Graph()  # グラフの生成
-        # self.radius = {}                        #各ノードの半径をランダムに決め格納する配列
         self.radius = np.sqrt(multiple) * radius  # 各ノード半径を格納する配列
         self.circles = {}  # 各ノードの円の格納配列
-        self.outputdir_image = outputdir_image  # 出力画像の保存先
-        self.outputdir_gif = outputdir_gif  # 出力画像の保存先
         self.fig, self.ax = plt.subplots(figsize=(7, 7))
         self.plot_pattern = plot_pattern
         self.num_div = num_div
         self.dist = dist
-        self.rand_dist = rand_dist
-        self.freq = freq
         self.exposed_count = {i: None for i in self.positions}  # さらし端末カウンタ
 
         # ノードの配置
         for i in range(self.num_nodes):
             while True:
                 pos = (
-                    np.random.default_rng().uniform(node_x_range[0], node_x_range[1]),
-                    np.random.default_rng().uniform(node_y_range[0], node_y_range[1]),
+                    np.random.default_rng().uniform(
+                        self.node_x_range[0], self.node_x_range[1]
+                    ),
+                    np.random.default_rng().uniform(
+                        self.node_y_range[0], self.node_y_range[1]
+                    ),
                 )
                 if all(
                     np.linalg.norm(np.array(pos) - np.array(p)) >= min_distance
@@ -189,12 +172,8 @@ class setting:
         self.clear_plot()
         # ランダムな方向にノードを動かす
         for node_id, (x, y) in self.positions.items():
-            rand_x = np.random.default_rng().uniform(
-                self.rand_dist[0], self.rand_dist[1]
-            )
-            rand_y = np.random.default_rng().uniform(
-                self.rand_dist[0], self.rand_dist[1]
-            )
+            rand_x = np.random.default_rng().uniform(-1, 1)
+            rand_y = np.random.default_rng().uniform(-1, 1)
             move_x = self.dist * rand_x + x
             move_y = self.dist * rand_y + y
             move_x = max(self.node_x_range[0], min(self.node_x_range[1], move_x))
@@ -328,108 +307,97 @@ class setting:
 
     # 全体の描画 ノード0から順に円内にいるノードと接続を開始する
     def show(self):
+        print(f"Generating...")
         self.dir()
         self.plot_node()
         self.drawing_connections()
 
-        # for i in self.positions:
-        #     print(f"{i}: {self.exposed_count[i]}")
-
         # 最終的なself.routingの内容を表示
         for i in self.positions:
             print(f"({i}:{self.exposed_count[i]}: {self.routing[i]})")
-        # plt.show()
+        print(f"Completed!")
 
 
-class AODV(setting):
+class EXPOSED(setting):
     def __init__(
-        self,
-        plot_pattern,
-        num_nodes,
-        x_range,
-        y_range,
-        node_x_range,
-        node_y_range,
-        min_distance,
-        radius,
-        multiple,
-        outputdir_image,
-        outputdir_gif,
-        num_div,
-        dist,
-        rand_dist,
+        self, plot_pattern, num_nodes, min_distance, radius, multiple, num_div, dist
     ):
         super().__init__(
-            plot_pattern,
-            num_nodes,
-            x_range,
-            y_range,
-            node_x_range,
-            node_y_range,
-            min_distance,
-            radius,
-            multiple,
-            outputdir_image,
-            outputdir_gif,
-            num_div,
-            dist,
-            rand_dist,
+            plot_pattern, num_nodes, min_distance, radius, multiple, num_div, dist
         )
-        print(f"Initializing AODV...")
-        self.current = 0  # 通信要求出すノード
-        self.target_node = np.random.choice(list(self.positions.keys()))  # 捜索対象
+        print(f"Initializing EXPOSED...")
+        self.communication_freq = {  # 各ノードの通信頻度の格納配列
+            i: np.random.default_rng().uniform(0, 1) for i in self.positions
+        }
+        # self.target_node = np.random.choice(list(self.positions.keys()))  # 捜索対象
 
-    def route_discovery(self):
-        route_info_id = 0  # 経路情報
-        # 捜索対象がcurrentじゃないようにする
-        while self.target_node == current:
-            self.target_node = np.random.choice(list(self.positions.keys()))  # 捜索対象
+    # 通信を行うかの確率計算
+    def should_transmit(self) -> list:
+        self.transmit_node = []  # 送信ノードを格納
+        for node_id in self.positions:
+            random_values = np.random.default_rng().uniform(0, 1)
+            if random_values < self.communication_freq[node_id]:
+                self.transmit_node.append(node_id)
 
-        while current != self.target_node:
-            self.route_info = {route_info_id: []}
-            next = self.circle_detection(current)
-            for i in next:
-                if self.target_node != i:
-                    self.add_link(route_info_id, current, next)
+    # さらしを考慮した場合
+    def exposed_connect(self, iterations):
+        fram_index = 0
+        image_files = []
+        if self.plot_pattern == 0:
+            while iterations != 0:
+                self.should_transmit()
+                for node_id in self.transmit_node:
+                    super().taggle_circle(node_id, True)
+                iterations -= 1
+        if self.plot_pattern == 0:
+            for parent_node in range(self.num_nodes):
+                super().taggle_circle(parent_node, True)  # 円の表示
+                super().draw()
+                image_files.append(self.save_image(frame_index))
+                frame_index += 1
 
-                else:
-                    self.add_link(route_info_id, current, i)
-                    current = i
-                    return self.route_info[route_info_id]
+                child_node = self.circle_detection(parent_node)
+                for node_id in child_node:
+                    self.plot_edge(parent_node, node_id)
+                    self.update_routing(node_id, parent_node)
+                    self.draw()
+                    image_files.append(self.save_image(frame_index))
+                    frame_index += 1
+                self.taggle_circle(parent_node, False)  # 円の非表示
+                self.draw()
+                image_files.append(self.save_image(frame_index))
+                frame_index += 1
+                self.move()
 
-    def search(self, current, route_info_id):
-        next = self.circle_detection(current)
-        for i in next:
-            if self.target_node != i:
-                self.add_link(route_info_id, current, next)
-                self.search(next, route_info_id)
+            super().generate_gif(image_files)
 
-    # 接続先を追加する
-    def add_link(self, route_info_id, from_node, to_node):
-        self.route_info[route_info_id].append([from_node, to_node])
+    def show_exposed(self):
+        super().dir()
+        super()
 
-    # ルーティング方法ごとに描画方法を変える
-    def show_aodv(self):
         print(f"Generating...")
-        super().show()
+        self.exposed_connect()
         print(f"Completed!")
 
 
 if __name__ == "__main__":
-    basic = AODV(
-        plot_pattern,
-        num_nodes,
-        x_range,
-        y_range,
-        node_x_range,
-        node_y_range,
-        min_distance,
-        radius,
-        multiple,
-        outputdir_image,
-        outputdir_gif,
-        num_div,
-        dist,
-        rand_dist,
+    # basic = EXPOSED(
+    #     plot_pattern,
+    #     num_nodes,
+    #     # x_range,
+    #     # y_range,
+    #     # node_x_range,
+    #     # node_y_range,
+    #     min_distance,
+    #     radius,
+    #     multiple,
+    #     # outputdir_image,
+    #     # outputdir_gif,
+    #     num_div,
+    #     dist
+    # )
+    # basic.exposed_connect(iterations)
+    basic = setting(
+        plot_pattern, num_nodes, min_distance, radius, multiple, num_div, dist
     )
-    basic.show_aodv()
+    basic.show()
