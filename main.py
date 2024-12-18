@@ -349,6 +349,7 @@ class EXPOSED(setting):
                 for node_id in self.transmit_node:
                     super().taggle_circle(node_id, True)
                 iterations -= 1
+
         if self.plot_pattern == 0:
             for parent_node in range(self.num_nodes):
                 super().taggle_circle(parent_node, True)  # 円の表示
@@ -373,7 +374,7 @@ class EXPOSED(setting):
 
     def show_exposed(self):
         super().dir()
-        super()
+        super().plot_node()
 
         print(f"Generating...")
         self.exposed_connect()
