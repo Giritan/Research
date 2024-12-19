@@ -20,7 +20,7 @@ radius = 10  # ノードを中心とした円の半径(接続半径)
 multiple = 2  # 円の面積の倍数(√n * pi * r^2)
 
 # 0の時は途中経過をgifで表示、1の時は最終結果だけを画像で表示, 2の時はノードの移動を表示
-plot_pattern = 0
+plot_pattern = 1
 num_div = 5  # セルの分割数
 dist = 3  # 移動距離
 iterations = 20  # シミュレーション回数
@@ -112,11 +112,6 @@ class setting:
                 self.G.remove_edge(node_id_1, node_id_2)
         else:
             print(f"ERROR:ノード{node_id_1}または、ノード{node_id_2}が存在しません")
-
-    # ノードの追加(手動)
-    def add_node(self, node_id, pos):
-        self.G.add_node(node_id)
-        self.positions[node_id] = pos
 
     # ノードの色を変える None:デフォルトカラー
     def change_node_color(self, node_id=None):
