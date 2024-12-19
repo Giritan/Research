@@ -14,15 +14,16 @@ from typing import Any, List, Tuple
 from numpy.typing import NDArray
 
 # パラメータ
-num_nodes = 30  # ノード数
-min_distance = 5  # ノード間の最小距離
+num_nodes = 20  # ノード数
+min_distance = 10  # ノード間の最小距離
 radius = 10  # ノードを中心とした円の半径(接続半径)
 multiple = 2  # 円の面積の倍数(√n * pi * r^2)
 
 # 0の時は途中経過をgifで表示、1の時は最終結果だけを画像で表示, 2の時はノードの移動を表示
-plot_pattern = 1
+plot_pattern = 0
 num_div = 5  # セルの分割数
 dist = 3  # 移動距離
+hops = 8  # 接続可能ノード数
 iterations = 20  # シミュレーション回数
 
 
@@ -114,12 +115,13 @@ class setting:
             print(f"ERROR:ノード{node_id_1}または、ノード{node_id_2}が存在しません")
 
     # ノードの色を変える None:デフォルトカラー
-    def change_node_color(self, node_id=None):
+    def change_node_color(self, node_id=None, node_color=""):
         copy_G = self.G.copy()  # グラフのコピー
         if node_id is not None:
             self.draw_graph()
             color = [
-                "red" if node == node_id else "lightblue" for node in self.G.nodes()
+                node_color if node == node_id else "lightblue"
+                for node in self.G.nodes()
             ]  # 親ノードは赤でそれ以外は薄青にする
             nx.draw_networkx_nodes(
                 copy_G,
@@ -341,7 +343,24 @@ class setting:
         print(f"Completed!")
 
 
+# ルーティングテーブルを制御するクラス
 class routing_control(setting):
+    def __init__(
+        self,
+        hops,
+        plot_pattern,
+        num_nodes,
+        min_distance,
+        radius,
+        multiple,
+        num_div,
+        dist,
+    ):
+        super().__init__(
+            plot_pattern, num_nodes, min_distance, radius, multiple, num_div, dist
+        )
+        self.hops = hops
+
     # ルーティングテーブルの更新/追加
     def routing_update(self, node_id, parent_node=None):
         # ノードにルーティングを含んでないときに新たにルーティングテーブルを作成する
@@ -365,20 +384,37 @@ class routing_control(setting):
             ):
                 self.routing[node_id].append((parent_node, node_id))
 
-    # ルーティングテーブルの制御
-    # def routing_control(self):
+    # 接続ノード数の制限を行う
+    def routing_hops(self, parent_node, child_node):
+        hop_parent = len(self.routing[parent_node])
+        hop_child = len(self.routing[child_node])
+        if hop_parent < self.hops:
+            if hop_child < self.hops:
+                return True, None
+            else:
+                return False, hop_child
+        else:
+            return False, hop_parent
 
 
 class EXPOSED(routing_control, setting):
     def __init__(
-        self, plot_pattern, num_nodes, min_distance, radius, multiple, num_div, dist
+        self,
+        hops,
+        plot_pattern,
+        num_nodes,
+        min_distance,
+        radius,
+        multiple,
+        num_div,
+        dist,
     ):
         super().__init__(
-            plot_pattern, num_nodes, min_distance, radius, multiple, num_div, dist
+            hops, plot_pattern, num_nodes, min_distance, radius, multiple, num_div, dist
         )
         print(f"Initializing EXPOSED...")
         self.communication_freq = {  # 各ノードの通信頻度の格納配列
-            i: np.random.default_rng().uniform(0, 1) for i in self.positions
+            i: np.random.default_rng().uniform(0, 0.5) for i in self.positions
         }
         # self.target_node = np.random.choice(list(self.positions.keys()))  # 捜索対象
 
@@ -394,11 +430,12 @@ class EXPOSED(routing_control, setting):
     def exposed_connect(self, iterations):
         frame_index = 0
         image_files = []
+        self.error_counter = 0
         if self.plot_pattern == 0:
             while iterations != 0:
                 self.should_transmit()
                 for parent_node in self.transmit_node:
-                    super().change_node_color(parent_node)
+                    super().change_node_color(parent_node, "red")
                     super().taggle_circle(parent_node, True)
                     image_files.append(super().save_image(frame_index))
                     frame_index += 1
@@ -406,12 +443,21 @@ class EXPOSED(routing_control, setting):
                     child_node = super().circle_detection(parent_node)
                     for i in range(len(child_node)):
                         node_id = child_node[i]
-                        if not any(
-                            node_id in sublist for sublist in self.routing[parent_node]
-                        ):  # 接続済みのノードは無視する
-                            super().plot_edge(parent_node, node_id)
-                            super().routing_update(node_id, parent_node)
-                        super().change_node_color(parent_node)
+                        # ルーティングテーブルに空きがあるか確認
+                        result, error_node = super().routing_hops(parent_node, node_id)
+                        if result:
+                            # 接続済みのノードは無視する
+                            if not any(
+                                node_id in sublist
+                                for sublist in self.routing[parent_node]
+                            ):
+                                super().plot_edge(parent_node, node_id)
+                                super().routing_update(node_id, parent_node)
+                                super().change_node_color(parent_node, "red")
+                        else:
+                            # 空きがない方のノードをorangeで表示
+                            super().change_node_color(error_node, "orange")
+                            self.error_counter += 1
                         image_files.append(super().save_image(frame_index))
                         frame_index += 1
                     super().change_node_color()
@@ -422,8 +468,8 @@ class EXPOSED(routing_control, setting):
                 super().edge_check()
                 print(f"{iterations}")
                 iterations -= 1
-            super().save_image()
             super().generate_gif(image_files)
+            super().save_image()
 
         elif self.plot_pattern == 1:
             while iterations != 0:
@@ -432,11 +478,18 @@ class EXPOSED(routing_control, setting):
                     child_node = super().circle_detection(parent_node)
                     for i in range(len(child_node)):
                         node_id = child_node[i]
-                        if not any(
-                            node_id in sublist for sublist in self.routing[parent_node]
-                        ):  # 接続済みのノードは無視する
-                            super().plot_edge(parent_node, node_id)
-                            super().routing_update(node_id, parent_node)
+                        # ルーティングテーブルに空きがあるか確認
+                        result, error_node = super().routing_hops(parent_node, node_id)
+                        if result:
+                            if not any(
+                                node_id in sublist
+                                for sublist in self.routing[parent_node]
+                            ):  # 接続済みのノードは無視する
+                                super().plot_edge(parent_node, node_id)
+                                super().routing_update(node_id, parent_node)
+                        else:
+                            # 空きがなければエラーとしてカウントする
+                            self.error_counter += 1
                     super().change_node_color()
                 super().move()
                 super().edge_check()
@@ -458,19 +511,21 @@ class EXPOSED(routing_control, setting):
             print(
                 f"{node_id}: {rounded_communication_freq[node_id]}% : {self.routing[node_id]}"
             )
+        print(f"ノードの接続失敗回数: {self.error_counter} 回")
         print(f"Completed!")
 
 
 if __name__ == "__main__":
     start_time = time.time()
     basic = EXPOSED(
-        plot_pattern, num_nodes, min_distance, radius, multiple, num_div, dist
+        hops, plot_pattern, num_nodes, min_distance, radius, multiple, num_div, dist
     )
     basic.show_exposed(iterations)
     end_time = time.time()
     execution_time = end_time - start_time
     rounded_time = round(execution_time, 2)
-    print(f"実行にかかった時間: {execution_time} 秒")
+    print(f"実行にかかった時間: {rounded_time} 秒")
+
     # basic = setting(
     #     plot_pattern, num_nodes, min_distance, radius, multiple, num_div, dist
     # )
