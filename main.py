@@ -7,14 +7,15 @@ import numpy as np
 from PIL import Image
 import os  # ファイル・ディレクトリ操作に使用
 import shutil  # ファイル・ディレクトリ操作に使用
+import time
 
 # 山口くん↓
 from typing import Any, List, Tuple
 from numpy.typing import NDArray
 
 # パラメータ
-num_nodes = 10  # ノード数
-min_distance = 3  # ノード間の最小距離
+num_nodes = 30  # ノード数
+min_distance = 5  # ノード間の最小距離
 radius = 10  # ノードを中心とした円の半径(接続半径)
 multiple = 2  # 円の面積の倍数(√n * pi * r^2)
 
@@ -22,7 +23,7 @@ multiple = 2  # 円の面積の倍数(√n * pi * r^2)
 plot_pattern = 0
 num_div = 5  # セルの分割数
 dist = 3  # 移動距離
-iterations = 10  # シミュレーション回数
+iterations = 20  # シミュレーション回数
 
 
 class setting:
@@ -105,7 +106,10 @@ class setting:
         if node_id_1 in self.G and node_id_2 in self.G and remove is False:
             self.G.add_edge(node_id_1, node_id_2)
         elif remove is True:
-            self.G.remove_edge(node_id_1, node_id_2)
+            if self.G.has_edge(node_id_1, node_id_2) or self.G.has_edge(
+                node_id_2, node_id_1
+            ):
+                self.G.remove_edge(node_id_1, node_id_2)
         else:
             print(f"ERROR:ノード{node_id_1}または、ノード{node_id_2}が存在しません")
 
@@ -129,7 +133,6 @@ class setting:
                 node_size=self.node_size,
                 ax=self.ax,
             )
-            print("parent color")
             nx.draw_networkx_edges(
                 copy_G, pos=self.positions, edge_color="gray", ax=self.ax
             )
@@ -140,7 +143,6 @@ class setting:
             if copy_G in self.G:
                 copy_G.clear()
             self.draw()
-            print("default color")
 
     # ルーティングテーブルの更新/追加
     def update_routing(self, node_id, parent_node=None):
@@ -191,6 +193,20 @@ class setting:
         self.exposed_count[parent_node] = len(child_node_ids)
         return child_node_ids
 
+    # 移動後も接続されているか確認する
+    def edge_check(self):
+        for node_id in self.positions:
+            child_node = self.circle_detection(node_id)
+            for sublist in self.routing[node_id]:
+                # サークル内のノードとルーティングテーブル内のノードが一致しているか確認する
+                # 接続済みのノードがサークル内にいない場合エッジを削除する
+                if not any(node in child_node for node in sublist):
+                    node_id_1, node_id_2 = sublist
+                    self.routing[node_id].remove(
+                        sublist
+                    )  # ルーティングテーブルからエッジを削除
+                    self.plot_edge(node_id_1, node_id_2, True)  # グラフからエッジを削除
+
     # 現在のプロットを全て消去
     def clear_plot(self):
         self.G.clear()
@@ -223,6 +239,7 @@ class setting:
                 if route not in seen_routes:
                     self.plot_edge(node_id_1, node_id_2)
                     seen_routes.add(route)
+        self.draw()
 
     # 現在の状態を保存
     def save_image(self, frame_index=None):
@@ -323,8 +340,8 @@ class setting:
                     self.plot_edge(parent_node, node_id)
                     self.update_routing(node_id, parent_node)
                 self.draw()
-                self.save_image()
                 self.move()
+            self.save_image()
 
         elif self.plot_pattern == 2:
             for parent_node in range(self.num_nodes):
@@ -375,7 +392,6 @@ class EXPOSED(setting):
         frame_index = 0
         image_files = []
         if self.plot_pattern == 0:
-            # child_node = {i: [] for i in self.positions}    #各ノードに対して子ノードを格納する辞書
             while iterations != 0:
                 self.should_transmit()
                 for parent_node in self.transmit_node:
@@ -392,19 +408,6 @@ class EXPOSED(setting):
                         ):  # 接続済みのノードは無視する
                             super().plot_edge(parent_node, node_id)
                             super().update_routing(node_id, parent_node)
-                        else:
-                            for j, sublist in enumerate(self.routing[parent_node]):
-                                if not any(
-                                    node_id in sublist
-                                    for sublist in self.routing[parent_node]
-                                ):
-                                    node_id_1, node_id_2 = sublist
-                                    super().plot_edge(
-                                        node_id_1, node_id_2, True
-                                    )  # グラフからエッジを削除
-                                    self.routing[parent_node].remove(
-                                        sublist
-                                    )  # ルーティングテーブルからエッジを削除
                         super().change_node_color(parent_node)
                         image_files.append(super().save_image(frame_index))
                         frame_index += 1
@@ -413,30 +416,30 @@ class EXPOSED(setting):
                     image_files.append(super().save_image(frame_index))
                     frame_index += 1
                 super().move()
+                super().edge_check()
+                print(f"{iterations}")
                 iterations -= 1
+            super().save_image()
             super().generate_gif(image_files)
 
-        # if self.plot_pattern == 0:
-        #     for parent_node in range(self.num_nodes):
-        #         self.taggle_circle(parent_node, True)  # 円の表示
-        #         self.draw()
-        #         image_files.append(self.save_image(frame_index))
-        #         frame_index += 1
-
-        #         child_node = self.circle_detection(parent_node)
-        #         for node_id in child_node:
-        #             self.plot_edge(parent_node, node_id)
-        #             self.update_routing(node_id, parent_node)
-        #             self.draw()
-        #             image_files.append(self.save_image(frame_index))
-        #             frame_index += 1
-        #         self.taggle_circle(parent_node, False)  # 円の非表示
-        #         self.draw()
-        #         image_files.append(self.save_image(frame_index))
-        #         frame_index += 1
-        #         self.move()
-
-        #     super().generate_gif(image_files)
+        elif self.plot_pattern == 1:
+            while iterations != 0:
+                self.should_transmit()
+                for parent_node in self.transmit_node:
+                    child_node = super().circle_detection(parent_node)
+                    for i in range(len(child_node)):
+                        node_id = child_node[i]
+                        if not any(
+                            node_id in sublist for sublist in self.routing[parent_node]
+                        ):  # 接続済みのノードは無視する
+                            super().plot_edge(parent_node, node_id)
+                            super().update_routing(node_id, parent_node)
+                    super().change_node_color()
+                super().move()
+                super().edge_check()
+                print(f"{iterations}")
+                iterations -= 1
+            super().save_image()
 
     def show_exposed(self, iterations):
         super().dir()
@@ -444,18 +447,27 @@ class EXPOSED(setting):
 
         print(f"Generating...")
         self.exposed_connect(iterations)
+        rounded_communication_freq = {}
+        for node_id, value in self.communication_freq.items():
+            rounded_communication_freq[node_id] = round(value * 100, 1)
+        print(f"ノード番号: 通信確率 : ルーティングテーブル")
         for node_id in self.positions:
             print(
-                f"{node_id}: {self.communication_freq[node_id]} : {self.routing[node_id]}"
+                f"{node_id}: {rounded_communication_freq[node_id]}% : {self.routing[node_id]}"
             )
         print(f"Completed!")
 
 
 if __name__ == "__main__":
+    start_time = time.time()
     basic = EXPOSED(
         plot_pattern, num_nodes, min_distance, radius, multiple, num_div, dist
     )
     basic.show_exposed(iterations)
+    end_time = time.time()
+    execution_time = end_time - start_time
+    rounded_time = round(execution_time, 2)
+    print(f"実行にかかった時間: {execution_time} 秒")
     # basic = setting(
     #     plot_pattern, num_nodes, min_distance, radius, multiple, num_div, dist
     # )
