@@ -139,29 +139,6 @@ class setting:
                 copy_G.clear()
             self.draw()
 
-    # ルーティングテーブルの更新/追加
-    def update_routing(self, node_id, parent_node=None):
-        # ノードにルーティングを含んでないときに新たにルーティングテーブルを作成する
-        if node_id not in self.routing:
-            self.routing = {node_id: []}
-            # [from_node, to_node] == [A → B]
-
-        # ルーティングテーブルの更新
-        if parent_node is not None:
-            # 重複の確認
-            pair = (parent_node, node_id)
-            pair_reverse = (node_id, parent_node)
-            if (
-                pair not in self.routing[parent_node]
-                and pair_reverse not in self.routing[parent_node]
-            ):
-                self.routing[parent_node].append((parent_node, node_id))
-            if (
-                pair not in self.routing[node_id]
-                and pair_reverse not in self.routing[node_id]
-            ):
-                self.routing[node_id].append((parent_node, node_id))
-
     # 円の描画のON/OFF
     def taggle_circle(self, node_id, visible):
         if node_id in self.circles:
@@ -235,6 +212,9 @@ class setting:
                     self.plot_edge(node_id_1, node_id_2)
                     seen_routes.add(route)
         self.draw()
+
+    # 移動後にノードが重ならないようにする
+    # def node_contact_detection(self):
 
     # 現在の状態を保存
     def save_image(self, frame_index=None):
@@ -316,7 +296,7 @@ class setting:
                 child_node = self.circle_detection(parent_node)
                 for node_id in child_node:
                     self.plot_edge(parent_node, node_id)
-                    self.update_routing(node_id, parent_node)
+                    self.routing_update(node_id, parent_node)
                     self.draw()
                     image_files.append(self.save_image(frame_index))
                     frame_index += 1
@@ -333,7 +313,7 @@ class setting:
                 child_node = self.circle_detection(parent_node)
                 for node_id in child_node:
                     self.plot_edge(parent_node, node_id)
-                    self.update_routing(node_id, parent_node)
+                    self.routing_update(node_id, parent_node)
                 self.draw()
                 self.move()
             self.save_image()
@@ -361,7 +341,35 @@ class setting:
         print(f"Completed!")
 
 
-class EXPOSED(setting):
+class routing_control(setting):
+    # ルーティングテーブルの更新/追加
+    def routing_update(self, node_id, parent_node=None):
+        # ノードにルーティングを含んでないときに新たにルーティングテーブルを作成する
+        if node_id not in self.routing:
+            self.routing = {node_id: []}
+            # [from_node, to_node] == [A → B]
+
+        # ルーティングテーブルの更新
+        if parent_node is not None:
+            # 重複の確認
+            pair = (parent_node, node_id)
+            pair_reverse = (node_id, parent_node)
+            if (
+                pair not in self.routing[parent_node]
+                and pair_reverse not in self.routing[parent_node]
+            ):
+                self.routing[parent_node].append((parent_node, node_id))
+            if (
+                pair not in self.routing[node_id]
+                and pair_reverse not in self.routing[node_id]
+            ):
+                self.routing[node_id].append((parent_node, node_id))
+
+    # ルーティングテーブルの制御
+    # def routing_control(self):
+
+
+class EXPOSED(routing_control, setting):
     def __init__(
         self, plot_pattern, num_nodes, min_distance, radius, multiple, num_div, dist
     ):
@@ -370,7 +378,7 @@ class EXPOSED(setting):
         )
         print(f"Initializing EXPOSED...")
         self.communication_freq = {  # 各ノードの通信頻度の格納配列
-            i: np.random.default_rng().uniform(0, 0.5) for i in self.positions
+            i: np.random.default_rng().uniform(0, 1) for i in self.positions
         }
         # self.target_node = np.random.choice(list(self.positions.keys()))  # 捜索対象
 
@@ -402,7 +410,7 @@ class EXPOSED(setting):
                             node_id in sublist for sublist in self.routing[parent_node]
                         ):  # 接続済みのノードは無視する
                             super().plot_edge(parent_node, node_id)
-                            super().update_routing(node_id, parent_node)
+                            super().routing_update(node_id, parent_node)
                         super().change_node_color(parent_node)
                         image_files.append(super().save_image(frame_index))
                         frame_index += 1
@@ -428,7 +436,7 @@ class EXPOSED(setting):
                             node_id in sublist for sublist in self.routing[parent_node]
                         ):  # 接続済みのノードは無視する
                             super().plot_edge(parent_node, node_id)
-                            super().update_routing(node_id, parent_node)
+                            super().routing_update(node_id, parent_node)
                     super().change_node_color()
                 super().move()
                 super().edge_check()
