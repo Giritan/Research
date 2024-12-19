@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import matplotlib_fontja
 import networkx as nx
+from networkx import Graph
 import numpy as np
 from PIL import Image
 import os  # ファイル・ディレクトリ操作に使用
@@ -109,40 +110,37 @@ class setting:
             print(f"ERROR:ノード{node_id_1}または、ノード{node_id_2}が存在しません")
 
     # ノードの追加(手動)
-    def add_node(self, node_id, x, y, parent):
-        pos = (x, y)
+    def add_node(self, node_id, pos):
         self.G.add_node(node_id)
         self.positions[node_id] = pos
 
     # ノードの色を変える None:デフォルトカラー
     def change_node_color(self, node_id=None):
-        self.copy_G = self.G.copy()
-        edges = list(self.G.edges)
-        self.copy_G.clear()
-        self.plot_node()
-        pos = self.positions.get(node_id)
-        if pos is not None:
-            if node_id is not None:
-                color = [
-                    "red" if node == node_id else "lightblue" for node in self.G.nodes()
-                ]
-                nx.draw_networkx_nodes(
-                    self.copy_G,
-                    pos=self.positions,
-                    node_color=color,
-                    node_size=self.node_size,
-                    ax=self.ax,
-                )
-            else:
-                color = "lightblue"
-                nx.draw_networkx_nodes(
-                    self.copy_G,
-                    pos=self.positions,
-                    node_color=color,
-                    node_size=self.node_size,
-                    ax=self.ax,
-                )
-        self.G.add_edges_from(edges)
+        copy_G = self.G.copy()  # グラフのコピー
+        if node_id is not None:
+            self.draw_graph()
+            color = [
+                "red" if node == node_id else "lightblue" for node in self.G.nodes()
+            ]  # 親ノードは赤でそれ以外は薄青にする
+            nx.draw_networkx_nodes(
+                copy_G,
+                pos=self.positions,
+                node_color=color,
+                node_size=self.node_size,
+                ax=self.ax,
+            )
+            print("parent color")
+            nx.draw_networkx_edges(
+                copy_G, pos=self.positions, edge_color="gray", ax=self.ax
+            )
+            nx.draw_networkx_labels(
+                copy_G, pos=self.positions, font_color="black", ax=self.ax
+            )
+        else:
+            if copy_G in self.G:
+                copy_G.clear()
+            self.draw()
+            print("default color")
 
     # ルーティングテーブルの更新/追加
     def update_routing(self, node_id, parent_node=None):
@@ -381,7 +379,6 @@ class EXPOSED(setting):
             while iterations != 0:
                 self.should_transmit()
                 for parent_node in self.transmit_node:
-                    super().draw()
                     super().change_node_color(parent_node)
                     super().taggle_circle(parent_node, True)
                     image_files.append(super().save_image(frame_index))
@@ -408,12 +405,11 @@ class EXPOSED(setting):
                                     self.routing[parent_node].remove(
                                         sublist
                                     )  # ルーティングテーブルからエッジを削除
-                        super().draw()
+                        super().change_node_color(parent_node)
                         image_files.append(super().save_image(frame_index))
                         frame_index += 1
-                    super().draw()
-                    super().taggle_circle(parent_node, False)
                     super().change_node_color()
+                    super().taggle_circle(parent_node, False)
                     image_files.append(super().save_image(frame_index))
                     frame_index += 1
                 super().move()
