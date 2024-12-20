@@ -20,9 +20,9 @@ radius = 10  # ノードを中心とした円の半径(接続半径)
 multiple = 2  # 円の面積の倍数(√n * pi * r^2)
 
 # 0の時は途中経過をgifで表示、1の時は最終結果だけを画像で表示, 2の時はノードの移動を表示
-plot_pattern = 0
+plot_pattern = 1
 num_div = 5  # セルの分割数
-dist = 3  # 移動距離
+dist = 10  # 移動距離(8以上に設定するとedge_checkの表示がバグってしまう　最終的な結果には問題ない)
 hops = 5  # 接続可能ノード数
 iterations = 10  # シミュレーション回数
 
@@ -168,15 +168,21 @@ class setting:
     # 移動後も接続されているか確認する
     def edge_check(self):
         for node_id in self.positions:
-            child_node = self.circle_detection(node_id)
-            for sublist in self.routing[node_id]:
-                # サークル内のノードとルーティングテーブル内のノードが一致しているか確認する
-                # 接続済みのノードがサークル内にいない場合エッジを削除する
-                if not any(node in child_node for node in sublist):
+            if len(self.routing[node_id]) > 0:
+                child_node = self.circle_detection(node_id)
+                to_remove = []
+                for sublist in self.routing[node_id]:
+                    print(f"Checking sublist: {sublist}")
+                    # サークル内のノードとルーティングテーブル内のノードが一致しているか確認する
+                    # 接続済みのノードがサークル内にいない場合エッジを削除する
+                    if not any(node in child_node for node in sublist):
+                        to_remove.append(sublist)
+
+                for sublist in to_remove:
                     node_id_1, node_id_2 = sublist
-                    self.routing[node_id].remove(
-                        sublist
-                    )  # ルーティングテーブルからエッジを削除
+                    print(f"Removing edge: {sublist}")
+                    # ルーティングテーブルからエッジを削除
+                    self.routing[node_id].remove(sublist)
                     self.plot_edge(node_id_1, node_id_2, True)  # グラフからエッジを削除
 
     # 現在のプロットを全て消去
@@ -211,6 +217,7 @@ class setting:
                 if route not in seen_routes:
                     self.plot_edge(node_id_1, node_id_2)
                     seen_routes.add(route)
+        self.edge_check()
         self.draw()
 
     # 現在の状態を保存
@@ -229,7 +236,7 @@ class setting:
         images = [Image.open(img_file) for img_file in image_files]
         gif_filename = os.path.join(self.outputdir_gif, "simulation.gif")
         images[0].save(
-            gif_filename, save_all=True, append_images=images[1:], duration=200
+            gif_filename, save_all=True, append_images=images[1:], duration=300
         )
         # print(f"GIF saved as {gif_filename}")
 
@@ -244,7 +251,7 @@ class setting:
         self.ax.set_xlabel("X軸")
         self.ax.set_ylabel("Y軸", labelpad=15, rotation="horizontal")
         if self.iterations != 0:
-            self.ax.set_title(f"残シミュレーション回数: {self.iterations}")
+            self.ax.set_title(f"残シミュレーション回数: {self.iterations} 回")
         else:
             self.ax.set_title(f"シミュレーション実行結果")
 
@@ -388,11 +395,11 @@ class routing_control(setting):
         child_hops = len(self.routing[child_node])
         if parent_hops < self.hops:
             if child_hops < self.hops:
-                return True, None
+                return None
             else:
-                return False, child_hops
+                return child_node
         else:
-            return False, parent_hops
+            return parent_node
 
 
 class EXPOSED(routing_control, setting):
@@ -436,9 +443,11 @@ class EXPOSED(routing_control, setting):
                         > self.communication_freq[node_id]
                     ):
                         super().change_node_color(node_id, "yellow")
+                        super().taggle_circle(node_id, False)
                         self.transmit_node.remove(node_id)
                     else:
                         super().change_node_color(parent_node, "yellow")
+                        super().taggle_circle(parent_node, False)
                         self.transmit_node.remove(parent_node)
                     self.exposed_count += 1
 
@@ -451,12 +460,13 @@ class EXPOSED(routing_control, setting):
         self.exposed_count = 0  # さらしノードカウンタ
         # 各親ノードの周りにある子ノードを格納する配列
         child_node = {i: [] for i in self.positions.keys()}
+
         if self.plot_pattern == 0:  # gifと最終結果の画像出力
             while self.iterations > 0:
                 self.iterations -= 1
-                super().move()  # ノードをランダムに移動させる
-                super().edge_check()  # 移動後、もともと接続されているノードが接続半径内にいるか確認する
                 self.should_transmit()  # 送信要求を行うノードを出力
+                super().move()  # ノードをランダムに移動させる
+
                 # 通信要求を出しているノードの色とサークルを描画
                 for parent_node in self.transmit_node:
                     # 親ノードの色を赤色に変える
@@ -465,20 +475,20 @@ class EXPOSED(routing_control, setting):
                     super().taggle_circle(parent_node, True)
                     # 親ノードの周りの子ノードを検出する
                     child_node[parent_node] = super().circle_detection(parent_node)
-                # 現在描画状態を保存
-                image_files.append(super().save_image(frame_index))
-                frame_index += 1
+                    # 現在描画状態を保存
+                    image_files.append(super().save_image(frame_index))
+                    frame_index += 1
 
-                # ノードの接続
-                for parent_node in self.transmit_node:
+                    # # ノードの接続
+                    # for parent_node in self.transmit_node:
                     # さらし端末が起きている端末は親ノードから除く
                     self.exposed_detection(child_node[parent_node])
                     for i in range(len(child_node[parent_node])):
                         self.num_connection_attempts += 1
                         node_id = child_node[parent_node][i]
                         # ルーティングテーブルに空きがあるか確認
-                        result, error_node = super().routing_hops(parent_node, node_id)
-                        if result:
+                        result = super().routing_hops(parent_node, node_id)
+                        if result is None:
                             # 接続済みのノードは無視する
                             if not any(
                                 node_id in sublist
@@ -489,20 +499,23 @@ class EXPOSED(routing_control, setting):
                                 super().change_node_color(parent_node, "red")
                         else:
                             # 空きがない方のノードをorangeで表示
-                            super().change_node_color(error_node, "orange")
-                            print(f"{error_node}")
+                            super().change_node_color(result, "orange")
+                            # print(f"{result} error node")
                             self.error_counter += 1
                         image_files.append(super().save_image(frame_index))
                         frame_index += 1
                     # 全ノードの色をデフォルトの"lightblue"にする
                     super().change_node_color()
-                    # 親ノードのサークルを消す
-                    for parent_node in self.transmit_node:
-                        super().taggle_circle(parent_node, False)
-                    image_files.append(super().save_image(frame_index))
-                    frame_index += 1
+                # 親ノードのサークルを消す
+                for parent_node in self.transmit_node:
+                    super().taggle_circle(parent_node, False)
+                image_files.append(super().save_image(frame_index))
+                frame_index += 1
                 # 残りのシミュレーション回数を表示
                 print(f"{self.iterations + 1}")
+            for node_id in self.positions:
+                if len(self.routing[node_id]) > 0:
+                    super().taggle_circle(node_id, True)
             # 最終結果とgifの生成を行う
             super().save_image()
             super().generate_gif(image_files)
@@ -511,16 +524,18 @@ class EXPOSED(routing_control, setting):
             while self.iterations != 0:
                 self.iterations -= 1
                 super().move()
-                super().edge_check()
                 self.should_transmit()
                 for parent_node in self.transmit_node:
-                    child_node = super().circle_detection(parent_node)
-                    for i in range(len(child_node)):
+                    child_node[parent_node] = super().circle_detection(parent_node)
+
+                for parent_node in self.transmit_node:
+                    self.exposed_detection(child_node[parent_node])
+                    for i in range(len(child_node[parent_node])):
                         self.num_connection_attempts += 1
-                        node_id = child_node[i]
+                        node_id = child_node[parent_node][i]
                         # ルーティングテーブルに空きがあるか確認
-                        result, error_node = super().routing_hops(parent_node, node_id)
-                        if result:
+                        result = super().routing_hops(parent_node, node_id)
+                        if result is None:
                             if not any(
                                 node_id in sublist
                                 for sublist in self.routing[parent_node]
@@ -532,6 +547,9 @@ class EXPOSED(routing_control, setting):
                             self.error_counter += 1
                     super().change_node_color()
                 print(f"{self.iterations + 1}")
+            for node_id in self.positions:
+                if len(self.routing[node_id]) > 0:
+                    super().taggle_circle(node_id, True)
             super().save_image()
 
     def show_exposed(self):
@@ -550,7 +568,7 @@ class EXPOSED(routing_control, setting):
             )
         print(f"接続試行回数:        {self.num_connection_attempts}回")
         print(f"ノードの接続失敗回数: {self.error_counter} 回")
-        print(f"さらしノード回数:    {self.exposed_count}回")
+        print(f"さらしノード回数:     {self.exposed_count}回")
         print(f"Completed!")
 
 
