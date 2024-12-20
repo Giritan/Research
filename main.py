@@ -14,7 +14,7 @@ from typing import Any, List, Tuple
 from numpy.typing import NDArray
 
 # パラメータ
-num_nodes = 20  # ノード数
+num_nodes = 30  # ノード数
 min_distance = 5  # ノード間の最小距離
 radius = 10  # ノードを中心とした円の半径(接続半径)
 multiple = 2  # 円の面積の倍数(√n * pi * r^2)
@@ -24,7 +24,7 @@ plot_pattern = 0
 num_div = 5  # セルの分割数
 dist = 3  # 移動距離
 hops = 5  # 接続可能ノード数
-iterations = 30  # シミュレーション回数
+iterations = 10  # シミュレーション回数
 
 
 class setting:
@@ -50,7 +50,6 @@ class setting:
         self.plot_pattern = plot_pattern
         self.num_div = num_div
         self.dist = dist
-        self.exposed_count = {i: None for i in self.positions}  # さらし端末カウンタ
         self.node_size = 200  # 描画ノードサイズ
 
         # ノードの配置
@@ -164,7 +163,6 @@ class setting:
         # reverse = falseの時 昇順(近い順)/ trueの時 降順(遠い順)
         children_sort = sorted(children_in_radius, key=lambda x: x[1], reverse=False)
         child_node_ids = [node_id for node_id, _ in children_sort]  # IDのみ抽出
-        self.exposed_count[parent_node] = len(child_node_ids)
         return child_node_ids
 
     # 移動後も接続されているか確認する
@@ -214,9 +212,6 @@ class setting:
                     self.plot_edge(node_id_1, node_id_2)
                     seen_routes.add(route)
         self.draw()
-
-    # 移動後にノードが重ならないようにする
-    # def node_contact_detection(self):
 
     # 現在の状態を保存
     def save_image(self, frame_index=None):
@@ -342,7 +337,7 @@ class setting:
         # 最終的なself.routingの内容を表示
         print(f"(node_id: route hops : routing)")
         for i in self.positions:
-            print(f"({i}: {self.exposed_count[i]} : {self.routing[i]})")
+            print(f"({i}: {self.routing[i]})")
         print(f"Completed!")
 
 
@@ -430,28 +425,57 @@ class EXPOSED(routing_control, setting):
             if random_values < self.communication_freq[node_id]:
                 self.transmit_node.append(node_id)
 
+    # さらし端末検出
+    def exposed_detection(self, child_node):
+        for parent_node in self.transmit_node:
+            for node_id in child_node:
+                if parent_node == node_id:
+                    # 除くノードは通信頻度が低い方のノードを除く
+                    if (
+                        self.communication_freq[parent_node]
+                        > self.communication_freq[node_id]
+                    ):
+                        super().change_node_color(node_id, "yellow")
+                        self.transmit_node.remove(node_id)
+                    else:
+                        super().change_node_color(parent_node, "yellow")
+                        self.transmit_node.remove(parent_node)
+                    self.exposed_count += 1
+
     # さらしを考慮した場合
     def exposed_connect(self):
-        frame_index = 0
-        image_files = []
-        self.num_connection_attempts = 0
-        self.error_counter = 0
-        if self.plot_pattern == 0:
+        frame_index = 0  # 保存画像インデックス
+        image_files = []  # 保存画像の格納リスト
+        self.num_connection_attempts = 0  # 接続試行回数
+        self.error_counter = 0  # 接続失敗回数(ルーティングテーブルが満杯だった時加算)
+        self.exposed_count = 0  # さらしノードカウンタ
+        # 各親ノードの周りにある子ノードを格納する配列
+        child_node = {i: [] for i in self.positions.keys()}
+        if self.plot_pattern == 0:  # gifと最終結果の画像出力
             while self.iterations > 0:
                 self.iterations -= 1
-                super().move()
-                super().edge_check()
-                self.should_transmit()
+                super().move()  # ノードをランダムに移動させる
+                super().edge_check()  # 移動後、もともと接続されているノードが接続半径内にいるか確認する
+                self.should_transmit()  # 送信要求を行うノードを出力
+                # 通信要求を出しているノードの色とサークルを描画
                 for parent_node in self.transmit_node:
+                    # 親ノードの色を赤色に変える
                     super().change_node_color(parent_node, "red")
+                    # 親ノードの接続半径を可視化する
                     super().taggle_circle(parent_node, True)
-                    image_files.append(super().save_image(frame_index))
-                    frame_index += 1
+                    # 親ノードの周りの子ノードを検出する
+                    child_node[parent_node] = super().circle_detection(parent_node)
+                # 現在描画状態を保存
+                image_files.append(super().save_image(frame_index))
+                frame_index += 1
 
-                    child_node = super().circle_detection(parent_node)
-                    for i in range(len(child_node)):
+                # ノードの接続
+                for parent_node in self.transmit_node:
+                    # さらし端末が起きている端末は親ノードから除く
+                    self.exposed_detection(child_node[parent_node])
+                    for i in range(len(child_node[parent_node])):
                         self.num_connection_attempts += 1
-                        node_id = child_node[i]
+                        node_id = child_node[parent_node][i]
                         # ルーティングテーブルに空きがあるか確認
                         result, error_node = super().routing_hops(parent_node, node_id)
                         if result:
@@ -470,11 +494,16 @@ class EXPOSED(routing_control, setting):
                             self.error_counter += 1
                         image_files.append(super().save_image(frame_index))
                         frame_index += 1
+                    # 全ノードの色をデフォルトの"lightblue"にする
                     super().change_node_color()
-                    super().taggle_circle(parent_node, False)
+                    # 親ノードのサークルを消す
+                    for parent_node in self.transmit_node:
+                        super().taggle_circle(parent_node, False)
                     image_files.append(super().save_image(frame_index))
                     frame_index += 1
+                # 残りのシミュレーション回数を表示
                 print(f"{self.iterations + 1}")
+            # 最終結果とgifの生成を行う
             super().save_image()
             super().generate_gif(image_files)
 
@@ -519,8 +548,9 @@ class EXPOSED(routing_control, setting):
             print(
                 f"{node_id}: {rounded_communication_freq[node_id]}% : {self.routing[node_id]}"
             )
-        print(f"接続試行回数: {self.num_connection_attempts}")
+        print(f"接続試行回数:        {self.num_connection_attempts}回")
         print(f"ノードの接続失敗回数: {self.error_counter} 回")
+        print(f"さらしノード回数:    {self.exposed_count}回")
         print(f"Completed!")
 
 
