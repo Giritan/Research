@@ -15,7 +15,7 @@ from numpy.typing import NDArray
 
 # パラメータ
 num_nodes = 20  # ノード数
-min_distance = 10  # ノード間の最小距離
+min_distance = 5  # ノード間の最小距離
 radius = 10  # ノードを中心とした円の半径(接続半径)
 multiple = 2  # 円の面積の倍数(√n * pi * r^2)
 
@@ -23,8 +23,8 @@ multiple = 2  # 円の面積の倍数(√n * pi * r^2)
 plot_pattern = 0
 num_div = 5  # セルの分割数
 dist = 3  # 移動距離
-hops = 8  # 接続可能ノード数
-iterations = 20  # シミュレーション回数
+hops = 5  # 接続可能ノード数
+iterations = 30  # シミュレーション回数
 
 
 class setting:
@@ -220,11 +220,11 @@ class setting:
 
     # 現在の状態を保存
     def save_image(self, frame_index=None):
-        if self.plot_pattern == 0 or self.plot_pattern == 2:
+        if not frame_index is None:
             image_filename = os.path.join(
                 self.outputdir_image, f"simulation_{frame_index}.png"
             )
-        elif self.plot_pattern == 1 and frame_index is None:
+        else:
             image_filename = os.path.join(self.outputdir_gif, f"simulation_result.png")
         self.fig.savefig(image_filename, bbox_inches="tight")
         return image_filename
@@ -248,7 +248,10 @@ class setting:
         self.ax.grid(True, linestyle="--", linewidth=0.5, zorder=0)  # 罫線を表示
         self.ax.set_xlabel("X軸")
         self.ax.set_ylabel("Y軸", labelpad=15, rotation="horizontal")
-        self.ax.set_title("ノードの描画")
+        if self.iterations != 0:
+            self.ax.set_title(f"残シミュレーション回数: {self.iterations}")
+        else:
+            self.ax.set_title(f"シミュレーション実行結果")
 
     # ノード・エッジ・ラベルの描画
     def draw(self):
@@ -386,15 +389,15 @@ class routing_control(setting):
 
     # 接続ノード数の制限を行う
     def routing_hops(self, parent_node, child_node):
-        hop_parent = len(self.routing[parent_node])
-        hop_child = len(self.routing[child_node])
-        if hop_parent < self.hops:
-            if hop_child < self.hops:
+        parent_hops = len(self.routing[parent_node])
+        child_hops = len(self.routing[child_node])
+        if parent_hops < self.hops:
+            if child_hops < self.hops:
                 return True, None
             else:
-                return False, hop_child
+                return False, child_hops
         else:
-            return False, hop_parent
+            return False, parent_hops
 
 
 class EXPOSED(routing_control, setting):
@@ -416,6 +419,7 @@ class EXPOSED(routing_control, setting):
         self.communication_freq = {  # 各ノードの通信頻度の格納配列
             i: np.random.default_rng().uniform(0, 0.5) for i in self.positions
         }
+        self.iterations = iterations
         # self.target_node = np.random.choice(list(self.positions.keys()))  # 捜索対象
 
     # 通信を行うかの確率計算
@@ -427,12 +431,16 @@ class EXPOSED(routing_control, setting):
                 self.transmit_node.append(node_id)
 
     # さらしを考慮した場合
-    def exposed_connect(self, iterations):
+    def exposed_connect(self):
         frame_index = 0
         image_files = []
+        self.num_connection_attempts = 0
         self.error_counter = 0
         if self.plot_pattern == 0:
-            while iterations != 0:
+            while self.iterations > 0:
+                self.iterations -= 1
+                super().move()
+                super().edge_check()
                 self.should_transmit()
                 for parent_node in self.transmit_node:
                     super().change_node_color(parent_node, "red")
@@ -442,6 +450,7 @@ class EXPOSED(routing_control, setting):
 
                     child_node = super().circle_detection(parent_node)
                     for i in range(len(child_node)):
+                        self.num_connection_attempts += 1
                         node_id = child_node[i]
                         # ルーティングテーブルに空きがあるか確認
                         result, error_node = super().routing_hops(parent_node, node_id)
@@ -457,6 +466,7 @@ class EXPOSED(routing_control, setting):
                         else:
                             # 空きがない方のノードをorangeで表示
                             super().change_node_color(error_node, "orange")
+                            print(f"{error_node}")
                             self.error_counter += 1
                         image_files.append(super().save_image(frame_index))
                         frame_index += 1
@@ -464,19 +474,20 @@ class EXPOSED(routing_control, setting):
                     super().taggle_circle(parent_node, False)
                     image_files.append(super().save_image(frame_index))
                     frame_index += 1
-                super().move()
-                super().edge_check()
-                print(f"{iterations}")
-                iterations -= 1
-            super().generate_gif(image_files)
+                print(f"{self.iterations + 1}")
             super().save_image()
+            super().generate_gif(image_files)
 
         elif self.plot_pattern == 1:
-            while iterations != 0:
+            while self.iterations != 0:
+                self.iterations -= 1
+                super().move()
+                super().edge_check()
                 self.should_transmit()
                 for parent_node in self.transmit_node:
                     child_node = super().circle_detection(parent_node)
                     for i in range(len(child_node)):
+                        self.num_connection_attempts += 1
                         node_id = child_node[i]
                         # ルーティングテーブルに空きがあるか確認
                         result, error_node = super().routing_hops(parent_node, node_id)
@@ -491,18 +502,15 @@ class EXPOSED(routing_control, setting):
                             # 空きがなければエラーとしてカウントする
                             self.error_counter += 1
                     super().change_node_color()
-                super().move()
-                super().edge_check()
-                print(f"{iterations}")
-                iterations -= 1
+                print(f"{self.iterations + 1}")
             super().save_image()
 
-    def show_exposed(self, iterations):
+    def show_exposed(self):
         super().dir()
         super().plot_node()
 
         print(f"Generating...")
-        self.exposed_connect(iterations)
+        self.exposed_connect()
         rounded_communication_freq = {}
         for node_id, value in self.communication_freq.items():
             rounded_communication_freq[node_id] = round(value * 100, 1)
@@ -511,6 +519,7 @@ class EXPOSED(routing_control, setting):
             print(
                 f"{node_id}: {rounded_communication_freq[node_id]}% : {self.routing[node_id]}"
             )
+        print(f"接続試行回数: {self.num_connection_attempts}")
         print(f"ノードの接続失敗回数: {self.error_counter} 回")
         print(f"Completed!")
 
@@ -520,7 +529,7 @@ if __name__ == "__main__":
     basic = EXPOSED(
         hops, plot_pattern, num_nodes, min_distance, radius, multiple, num_div, dist
     )
-    basic.show_exposed(iterations)
+    basic.show_exposed()
     end_time = time.time()
     execution_time = end_time - start_time
     rounded_time = round(execution_time, 2)
