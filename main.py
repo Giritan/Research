@@ -566,9 +566,9 @@ class EXPOSED(routing_control, setting):
             print(
                 f"{node_id}: {rounded_communication_freq[node_id]}% : {self.routing[node_id]}"
             )
-        print(f"接続試行回数:        {self.num_connection_attempts}回")
-        print(f"ノードの接続失敗回数: {self.error_counter} 回")
-        print(f"さらしノード回数:     {self.exposed_count}回")
+        print(f"接続試行回数:      {self.num_connection_attempts}回")
+        print(f"接続失敗回数:      {self.error_counter}回")
+        print(f"さらしノード回数:  {self.exposed_count}回")
         print(f"Completed!")
 
 
