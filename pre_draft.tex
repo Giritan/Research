@@ -1,0 +1,137 @@
+%コンパイル方法: opt+cmd+b →　opt+cmd+v
+\RequirePackage{plautopatch}
+
+\documentclass[a4paper, 10pt]{ltjsarticle}
+
+
+% マージン設定
+\usepackage[top=20mm, bottom=20mm, left=20mm, right=20mm]{geometry}
+
+% LuaLaTeX用日本語対応パッケージ
+\usepackage{luatexja}
+\usepackage{luatexja-fontspec}
+
+% 必要なパッケージ
+\usepackage{fontspec}
+\usepackage{titlesec}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{hyperref}
+\usepackage[english, japanese]{babel}
+\usepackage{multicol} % 二段組用パッケージ
+\usepackage{indentfirst}
+\usepackage{tikz} % カスタム点線用
+\usepackage{authblk} % 著者・所属パッケージ
+\usepackage{here}
+\usepackage{caption}
+
+% \setmainfont[Ligatures=TeX]{Times New Roman}
+% \setmainjfont[BoldFont=MS Gothic]{MS Mincho}
+
+\renewcommand{\baselinestretch}{0.95}
+
+% セクション見出しのカスタマイズ
+\titleformat{\section}
+  {\fontsize{10pt}{10pt}}
+  {\thesection.}
+  {1em}{}
+
+\titleformat{\subsection}
+  {\fontsize{10pt}{10pt}}
+  {\thesubsection}
+  {1em}{}
+
+\titleformat{\subsubsection}
+  {\fontsize{10pt}{10pt}}
+  {\thesubsubsection}
+  {1em}{}
+
+  \setlength{\parindent}{1em}
+% \setlength{\belowcaptionskip}{1em} % キャプション下の余白を -10pt に設定
+
+
+
+\titlespacing*{\section}{0em}{1em}{0em}
+\titlespacing*{\subsection}{0em}{1em}{0em}
+
+\pagestyle{empty}
+
+
+\begin{document}
+
+\setlength{\columnsep}{7.5mm}
+
+\twocolumn[
+    \begin{center}
+        {\vspace{-1em}}
+
+        {\fontsize{15pt}{15pt}\selectfont{位置依存情報を用いた災害情報共有能力を用いたアドホックネットワークの提案}}
+
+        {\vspace{1.5em}}
+
+        {\fontsize{13pt}{13pt}\selectfont{}}
+    \end{center}
+
+
+
+    \begin{flushright}
+      {\fontsize{11pt}{11pt}\selectfont{T5-17　末廣隼人\\}}
+      {\fontsize{11pt}{11pt}\selectfont{指導教員　髙﨑和之}}
+    \end{flushright}
+
+    \vspace{1em}
+
+    \thispagestyle{empty}
+]
+
+\section{はじめ}
+
+
+\section{理論}
+\subsection{アドホックネットワーク}
+\subsection{位置依存情報}
+
+\section{提案手法}
+
+\subsection{CSMA/CA}
+
+% \begin{figure}[h]
+%   \centering
+%   \includegraphics[width=0.8\columnwidth]{./assets/csmaca-1.png}
+% \end{figure}
+
+\subsubsection{CW(Contention Window)}
+
+再送回数を$n$とするとCWの最大値はn
+
+\begin{align}
+  \text{cw\_max} &= 2^{4 + n} - 1
+\end{align}
+
+となり,スロット数は
+
+\begin{align}
+  \text{slots} &= \mathrm{randomint}(1, \; \min(\text{cw\_max}, \; 1023))
+\end{align}
+
+で定義される.
+
+
+\subsection{パケット構成}
+
+% 必要だったら
+\subsection{User class}
+
+
+\section{結果}
+
+% \begin{figure}[h]
+%   \centering
+%   \includegraphics[width=0.9\columnwidth]{./assets/graph.png}
+% \end{figure}
+
+\section{まとめ}
+
+
+\end{document}

@@ -14,9 +14,9 @@ from typing import Any, List, Tuple
 from numpy.typing import NDArray
 
 # パラメータ
-num_nodes = 30  # ノード数
+num_nodes = 10  # ノード数
 min_distance = 5  # ノード間の最小距離
-radius = 10  # ノードを中心とした円の半径(接続半径)
+radius = 15  # ノードを中心とした円の半径(接続半径)
 multiple = 2  # 円の面積の倍数(√n * pi * r^2)
 
 # 0の時は途中経過をgifで表示、1の時は最終結果だけを画像で表示, 2の時はノードの移動を表示
@@ -37,7 +37,15 @@ class setting:
     outputdir_gif = "simulation_gif"  # gifの保存先
 
     def __init__(
-        self, plot_pattern, num_nodes, min_distance, radius, multiple, num_div, dist
+        self,
+        plot_pattern,
+        num_nodes,
+        min_distance,
+        radius,
+        multiple,
+        num_div,
+        dist,
+        # iterations,
     ):
         print(f"Initializing Setting...")
         # 変数の初期化
@@ -51,6 +59,7 @@ class setting:
         self.num_div = num_div
         self.dist = dist
         self.node_size = 200  # 描画ノードサイズ
+        # self.iterations = iterations
 
         # ノードの配置
         for i in range(self.num_nodes):
@@ -172,7 +181,7 @@ class setting:
                 child_node = self.circle_detection(node_id)
                 to_remove = []
                 for sublist in self.routing[node_id]:
-                    print(f"Checking sublist: {sublist}")
+                    # print(f"Checking sublist: {sublist}")
                     # サークル内のノードとルーティングテーブル内のノードが一致しているか確認する
                     # 接続済みのノードがサークル内にいない場合エッジを削除する
                     if not any(node in child_node for node in sublist):
@@ -180,10 +189,33 @@ class setting:
 
                 for sublist in to_remove:
                     node_id_1, node_id_2 = sublist
-                    print(f"Removing edge: {sublist}")
+                    # print(f"Removing edge: {sublist}")
                     # ルーティングテーブルからエッジを削除
                     self.routing[node_id].remove(sublist)
                     self.plot_edge(node_id_1, node_id_2, True)  # グラフからエッジを削除
+
+    # ルーティングテーブルの更新/追加
+    def routing_update(self, node_id, parent_node=None):
+        # ノードにルーティングを含んでないときに新たにルーティングテーブルを作成する
+        if node_id not in self.routing:
+            self.routing = {node_id: []}
+            # [from_node, to_node] == [A → B]
+
+        # ルーティングテーブルの更新
+        if parent_node is not None:
+            # 重複の確認
+            pair = (parent_node, node_id)
+            pair_reverse = (node_id, parent_node)
+            if (
+                pair not in self.routing[parent_node]
+                and pair_reverse not in self.routing[parent_node]
+            ):
+                self.routing[parent_node].append((parent_node, node_id))
+            if (
+                pair not in self.routing[node_id]
+                and pair_reverse not in self.routing[node_id]
+            ):
+                self.routing[node_id].append((parent_node, node_id))
 
     # 現在のプロットを全て消去
     def clear_plot(self):
@@ -365,29 +397,6 @@ class routing_control(setting):
             plot_pattern, num_nodes, min_distance, radius, multiple, num_div, dist
         )
         self.hops = hops
-
-    # ルーティングテーブルの更新/追加
-    def routing_update(self, node_id, parent_node=None):
-        # ノードにルーティングを含んでないときに新たにルーティングテーブルを作成する
-        if node_id not in self.routing:
-            self.routing = {node_id: []}
-            # [from_node, to_node] == [A → B]
-
-        # ルーティングテーブルの更新
-        if parent_node is not None:
-            # 重複の確認
-            pair = (parent_node, node_id)
-            pair_reverse = (node_id, parent_node)
-            if (
-                pair not in self.routing[parent_node]
-                and pair_reverse not in self.routing[parent_node]
-            ):
-                self.routing[parent_node].append((parent_node, node_id))
-            if (
-                pair not in self.routing[node_id]
-                and pair_reverse not in self.routing[node_id]
-            ):
-                self.routing[node_id].append((parent_node, node_id))
 
     # 接続ノード数の制限を行う
     def routing_hops(self, parent_node, child_node):
@@ -580,7 +589,7 @@ if __name__ == "__main__":
     basic.show_exposed()
     end_time = time.time()
     execution_time = end_time - start_time
-    rounded_time = round(execution_time, 2)
+    rounded_time = round(execution_time, 0)
     print(f"実行にかかった時間: {rounded_time} 秒")
 
     # basic = setting(
