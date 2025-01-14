@@ -18,7 +18,7 @@ population = 2000  # 千葉県の人口密度(km^2)
 holding_ratio = 0.886
 num_nodes = int(population * holding_ratio)  # ノード数
 A = (1 / population) ** 1000  # 面積(k^2 → m^2　に変換)
-min_distance = int(np.sqrt(A / np.pi))  # ノード間の最小距離
+min_distance = float(np.sqrt(A / np.pi))  # ノード間の最小距離
 radius = 30  # ノードを中心とした円の半径(接続半径) bluetooth想定
 multiple = 1  # 円の面積の倍数(√n * pi * r^2)
 
@@ -64,7 +64,7 @@ class setting:
         self.plot_pattern = plot_pattern
         self.num_div = num_div
         self.dist = dist
-        self.node_size = 5  # 描画ノードサイズ
+        self.node_size = 1  # 描画ノードサイズ
         self.iterations = iterations
         self.first_sim = True  # 初回のシミュレーションのフラグ
         self.active_node = active_node  # 動的ノードの保持
@@ -375,7 +375,6 @@ class setting:
             density_matrix = self.plot_density()
             density_values = density_matrix.flatten()
             bin_edges = np.arange(density_values.min(), density_values.max() + 1)
-            print(bin_edges)
             self.ax[ax].hist(
                 density_values,
                 bins=bin_edges,
