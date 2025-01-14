@@ -375,6 +375,7 @@ class setting:
             density_matrix = self.plot_density()
             density_values = density_matrix.flatten()
             bin_edges = np.arange(density_values.min(), density_values.max() + 1)
+            print(f"グラフ幅: {bin_edges}")
             self.ax[ax].hist(
                 density_values,
                 bins=bin_edges,
