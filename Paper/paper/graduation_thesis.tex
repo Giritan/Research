@@ -59,4 +59,23 @@ name \\
 
 \thispagestyle{empty}
 \clearpage
+\subsection{アドホックネットワークの技術的課題}
+\subsubsection{隠れ端末問題}
+隠れ端末問題とは、図1のようにノードAとCがノードBに対して通信を行うとき、ノードAとCはお互いの存在が隠れてしまい、
+現在誰も通信を行なってないと思い込んで同時にノードBへと通信を行いデータが衝突してし壊れてしまう問題である。%
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=70mm]{hidden_terminal_problem.png}
+  \caption{隠れ端末問題}
+\end{figure}
+
+\subsubsection{さらし端末問題}
+さらし端末問題とは、図2のようにノードAがDと通信を行なっているときノードBは端末Cと通信ができそうだが、
+ノードAがDと通信を行なっているため周辺にいる他ノードは通信の抑制がされてしまい、
+伝送速度や通信品質の低下が発生してしまう問題である。%
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=70mm]{exposed_terminal_problem.png}
+  \caption{さらし端末問題}
+\end{figure}
 \end{document}
