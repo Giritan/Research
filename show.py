@@ -8,20 +8,28 @@ from PIL import Image
 import os  # ファイル・ディレクトリ操作に使用
 import shutil  # ファイル・ディレクトリ操作に使用
 import time
+import random
+from collections import deque
 
 # 山口くん↓
 from typing import Any, List, Tuple
 from numpy.typing import NDArray
 
 # パラメータ
-population = 2000  # 千葉県の人口密度(km^2)
-holding_ratio = 0.886
+population = 1217  # 千葉県の人口密度(km^2)
+holding_ratio = 0.886  # スマホ保有率
 num_nodes = int(population * holding_ratio)  # ノード数
 A = (1 / population) * 1000**2  # 面積(k^2 → m^2　に変換)
-min_distance = float(np.sqrt(A / np.pi))  # ノード間の最小距離
-radius = 30  # ノードを中心とした円の半径(接続半径) bluetooth想定
+# min_distance = float(np.sqrt(A / np.pi))  # ノード間の最小距離
+min_distance = 2  # ノード間の最小距離
 multiple = 1  # 円の面積の倍数(√n * pi * r^2)
-
+# 電柱の設置数
+lightpole = 3578 * 10000  # 本
+num_prefecture = 47  # 都道府県
+prefecture_area = 5156  # 県の面積 km^2 (千葉県)
+area_of_japan = 378000
+urban = 0.288
+lightpole = int(lightpole / (num_prefecture * prefecture_area))  # 本数/km^2
 # 0の時は途中経過をgifで表示、1の時は最終結果だけを画像で表示, 2の時は移動なし表示だけ
 plot_pattern = 3
 num_div = 10  # セルの分割数(n*n)
@@ -37,6 +45,8 @@ class setting:
     y_range = (0, 1000)  # y軸
     node_x_range = (10, 990)  # ノード用x軸
     node_y_range = (10, 990)  # ノード用y軸
+    lightpole_distance = (30, 40)  # 電柱間の最小距離
+    ble_radius = 30  # ノードを中心とした円の半径(接続半径) BLEを想定
     outputdir_image = "simulation_image"  # imageの保存先
     outputdir_gif = "simulation_gif"  # gifの保存先
 
@@ -45,22 +55,24 @@ class setting:
         plot_pattern,
         num_nodes,
         min_distance,
-        radius,
         multiple,
         num_div,
         dist,
         iterations,
         active_node,
         node_limits,
+        lightpole,
     ):
         print(f"Initializing Setting...")
         # 変数の初期化
         self.num_nodes = num_nodes  # ノード数
         self.positions = {}  # ノードの位置配列
         self.G = nx.Graph()  # グラフの生成
-        self.radius = np.sqrt(multiple) * radius  # 各ノード半径を格納する配列
+        self.ble_radius = (
+            np.sqrt(multiple) * self.ble_radius
+        )  # 各ノード半径を格納する配列
         self.circles = {}  # 各ノードの円の格納配列
-        self.fig, self.ax = plt.subplots(1, 3, figsize=(21, 7))
+        self.fig, self.ax = plt.subplots(1, 2, figsize=(14, 7))
         self.plot_pattern = plot_pattern
         self.num_div = num_div
         self.dist = dist
@@ -69,42 +81,83 @@ class setting:
         self.first_sim = True  # 初回のシミュレーションのフラグ
         self.active_node = active_node  # 動的ノードの保持
         self.node_limits = node_limits
-        self.closest_node = None
-        self.color = ["blue"]
+        self.closest_node_1 = None
+        self.closest_node_2 = None
+        self.node_color = ["blue"]
+        self.lightpole_color = ["green"]
+        self.edge_color = ["black"]
+        self.lightpole = lightpole
+        self.setting_nodes(min_distance)
 
+    def setting_nodes(self, min_distance):
+        num_nodes = self.num_nodes + self.lightpole
+        count = 0
         # ノードの配置
-        center_x = 0
-        center_y = 0
-        closest_distance = 9999  # 初期値を無限大にする
-        for node_id in range(self.num_nodes):
-            while True:
-                pos = (
-                    np.random.default_rng().uniform(
-                        self.node_x_range[0], self.node_x_range[1]
-                    ),
-                    np.random.default_rng().uniform(
-                        self.node_y_range[0], self.node_y_range[1]
-                    ),
+        closest_distance_1 = 9999  # 初期値を無限大にする
+        closest_distance_2 = 9999  # 初期値を無限大にする
+        for node_id in range(num_nodes):
+            if count < self.num_nodes:
+                # ノードの設置
+                while True:
+                    pos = (
+                        np.random.default_rng().uniform(
+                            self.node_x_range[0], self.node_x_range[1]
+                        ),
+                        np.random.default_rng().uniform(
+                            self.node_y_range[0], self.node_y_range[1]
+                        ),
+                    )
+                    if all(
+                        np.linalg.norm(np.array(pos) - np.array(p)) >= min_distance
+                        for key, p in self.positions.items()
+                        if isinstance(key, int) and key < self.num_nodes
+                    ):
+                        self.positions[node_id] = pos
+                        (x, y) = pos
+                        distance_1 = (
+                            (x - self.node_x_range[0] - 90) ** 2
+                            + (y - self.node_x_range[0] - 90) ** 2
+                        ) ** 0.5
+                        distance_2 = (
+                            (x - self.node_x_range[1] + 90) ** 2
+                            + (y - self.node_x_range[1] + 90) ** 2
+                        ) ** 0.5
+                        if distance_1 < distance_2:
+                            if distance_1 < closest_distance_1:
+                                closest_distance_1 = distance_1
+                                self.closest_node_1 = node_id
+                        else:
+                            if distance_2 < closest_distance_2:
+                                closest_distance_2 = distance_2
+                                self.closest_node_2 = node_id
+                        break
+                count += 1
+            else:
+                # 電柱の設置
+                lightpole_distance = np.random.default_rng().uniform(
+                    self.lightpole_distance[0], self.lightpole_distance[1]
                 )
-                if all(
-                    np.linalg.norm(np.array(pos) - np.array(p)) >= min_distance
-                    for p in self.positions.values()
-                ):
-                    self.positions[node_id] = pos
-                    (x, y) = pos
-                    distance = (
-                        (x - self.x_range[1] / 2) ** 2 + (y - self.y_range[1] / 2) ** 2
-                    ) ** 0.5
-                    if distance < closest_distance:
-                        closest_distance = distance
-                        self.closest_node = node_id
-                    break
+                while True:
+                    pos = (
+                        np.random.default_rng().uniform(
+                            self.node_x_range[0], self.node_x_range[1]
+                        ),
+                        np.random.default_rng().uniform(
+                            self.node_y_range[0], self.node_y_range[1]
+                        ),
+                    )
+                    if all(
+                        np.linalg.norm(np.array(pos) - np.array(p))
+                        >= lightpole_distance
+                        for key, p in self.positions.items()
+                        if isinstance(key, int) and key > self.num_nodes
+                    ):
+                        self.positions[node_id] = pos
+                        break
+                count += 1
 
         self.routing = {i: {"neighbors": [], "parent": None} for i in self.positions}
         self.hops = {i: None for i in self.positions}
-        self.s = {i: None for i in self.positions}
-        for i in self.positions:
-            self.s[i] = np.random.default_rng().integers(2, 13)
 
         if self.plot_pattern != 2 and self.plot_pattern != 3:
             self.plot_node()
@@ -120,17 +173,27 @@ class setting:
     # 生成済みのノードの円の描画の準備
     def generate_circle(self):
         for node_id, (x, y) in self.positions.items():
-            # 接続円をランダムに決める↓
-            # self.radius[node_id] = np.random.default_rng().uniform(radius[0], radius[1])
-            circle = patches.Circle(
-                (x, y),
-                radius=self.radius,
-                edgecolor="lightblue",
-                facecolor="lightblue",
-                linestyle="solid",  # デフォルト
-                # linestyle="dotted",   #点線
-                fill=True,
-            )
+            if node_id < self.num_nodes:
+                circle = patches.Circle(
+                    (x, y),
+                    radius=self.ble_radius,
+                    edgecolor="lightblue",
+                    facecolor="lightblue",
+                    linestyle="solid",  # デフォルト
+                    # linestyle="dotted",   #点線
+                    fill=True,
+                )
+            else:
+                circle = patches.Circle(
+                    (x, y),
+                    radius=self.ble_radius,
+                    edgecolor="lightgreen",
+                    facecolor="lightgreen",
+                    linestyle="solid",  # デフォルト
+                    # linestyle="dotted",   #点線
+                    fill=True,
+                )
+
             self.circles[node_id] = circle
             self.ax[0].add_patch(circle)
             circle.set_visible(False)
@@ -141,11 +204,14 @@ class setting:
         if node_id is not None:
             pos = self.positions.get(node_id)  # 引数として渡されたノードの位置を取得
             if pos is not None:
-                self.G.add_node(node_id, pos=pos, color=self.color)
+                self.G.add_node(node_id, pos=pos, color=self.node_color)
         # 引数がない場合はself.positionsの全てのノードを追加
         else:
             for i, pos in self.positions.items():
-                self.G.add_node(i, pos=pos, color=self.color)
+                if i < self.num_nodes:
+                    self.G.add_node(i, pos=pos, color=self.node_color)
+                else:
+                    self.G.add_node(i, pos=pos, color=self.lightpole_color)
 
     # エッジの描画/削除
     def plot_edge(self, node_id_1, node_id_2, remove=False):
@@ -161,11 +227,19 @@ class setting:
 
     # ノードの色を変える None:デフォルトカラー
     def change_node_color(self, node_ids=[], node_color=""):
-        # copy_G = self.G.copy()  # グラフのコピー
         if node_ids is not None:
-            self.color = [
-                node_color if node in node_ids else "blue" for node in self.G.nodes()
-            ]  # 親ノードは赤でそれ以外は薄青にする
+            self.node_color = [
+                (
+                    node_color
+                    if node in node_ids
+                    else (
+                        "yellow"
+                        if node == self.closest_node_1 or node == self.closest_node_2
+                        else "green" if node >= self.num_nodes else "blue"
+                    )
+                )
+                for node in self.G.nodes()
+            ]  # 接続できないノードは赤、接続できるノードは青、はじめに接続要求を行うノードは黄色、 電柱は緑にする
             # ノードの色をかえる
             self.clear_plot()
             self.generate_circle()
@@ -179,7 +253,6 @@ class setting:
                         self.plot_edge(node_id_1, node_id_2)
                         seen_routes.add(route)
                         seen_routes.add(reverse_route)
-            self.draw()
 
     # 円の描画のON/OFF
     def taggle_circle(self, node_id, visible):
@@ -197,7 +270,7 @@ class setting:
             if node_id != parent_node:  # 自分自身は除く
                 child_pos = np.array(pos)
                 distance = np.linalg.norm(parent_pos - child_pos)
-                if distance <= self.radius:
+                if distance <= self.ble_radius:
                     children_in_radius.append((node_id, distance))
 
         # 距離でソートし、ノード ID だけのリストに変換
@@ -331,75 +404,71 @@ class setting:
 
         elif ax == 1:
             density_matrix = self.plot_density()
-            im = self.ax[ax].imshow(
-                np.flipud(density_matrix),
-                extent=[
-                    self.x_range[0],
-                    self.x_range[1],
-                    self.y_range[0],
-                    self.y_range[1],
-                ],
-                cmap="Blues",
-                alpha=0.8,
-            )
-            self.ax[ax].set_xlabel("X軸 [m]")
-            self.ax[ax].set_ylabel("Y軸 [m]", labelpad=15, rotation="horizontal")
-            self.ax[ax].set_title("濃度分布 (Density Distribution)")
-            c_bar = plt.colorbar(im, ax=self.ax[ax])
-            c_bar.set_label("密度 [node/m^2]")
-            cell_div = density_matrix.shape[0]
-            x_centers = np.linspace(
-                self.cell_size / 2, self.x_range[1] - self.cell_size / 2, cell_div
-            )
-            y_centers = np.linspace(
-                self.cell_size / 2, self.x_range[1] - self.cell_size / 2, cell_div
-            )
-            # セル上にその濃度の値を表示
-            for i, x in enumerate(x_centers):
-                for j, y in enumerate(y_centers):
-                    value = int(density_matrix[j, i])
-                    self.ax[ax].text(
-                        x,
-                        y,
-                        f"{value}",
-                        color="black",
-                        ha="center",
-                        va="center",
-                        fontsize=8,
-                    )
-
-        elif ax == 2:
-            density_matrix = self.plot_density()
-            density_values = density_matrix.flatten()
-            bin_edges = np.arange(density_values.min(), density_values.max() + 1)
+            density_values = np.array(list(density_matrix.values()))
+            bin_edges = np.arange(density_values.min(), density_values.max() + 2, 1)
             print(f"グラフ幅: {bin_edges}")
-            self.ax[ax].hist(
+            bars = self.ax[ax].hist(
                 density_values,
                 bins=bin_edges,
                 color="blue",
                 alpha=0.7,
                 edgecolor="black",
+                width=0.5,
             )
+            for bar, count in zip(bars[2], bars[0]):
+                height = bar.get_height()
+                label_y_position = (
+                    height + 0.3
+                    if height < 10
+                    else (
+                        height + 0.5
+                        if height < 15
+                        else (
+                            height + 0.7
+                            if height < 20
+                            else height + 1 if height < 100 else height + 4
+                        )
+                    )
+                )  # 高いバーにはラベルをもっと上に
+                self.ax[ax].text(
+                    bar.get_x() + bar.get_width() / 2,  # バーの中心位置
+                    label_y_position,  # ラベルの位置（バーの下に配置）
+                    f"{int(count)}",  # カウントを整数として表示
+                    ha="center",  # テキストを中央揃え
+                    va="top",  # テキストを上揃え
+                    fontsize=8,
+                    color="black",
+                )
+            self.ax[ax].set_xticks(bin_edges[:-1])  # ビンの左端を目盛りに設定
             self.ax[ax].set_xlabel("濃度 (Density) [node/m^2]")
             self.ax[ax].set_ylabel("セル数 (Number of Cells) [cell]")
             self.ax[ax].set_title(
                 "濃度分布のヒストグラム (Histogram of Density Distribution)"
             )
-            self.ax[ax].grid(True, linestyle="--", linewidth=0.5, zorder=0)
+            self.ax[ax].grid(True, linestyle="--", linewidth=1, zorder=0)
 
     # ノード・エッジ・ラベルの描画
-    def draw(self, num=0):
-        self.draw_graph(ax=0, num=num)
+    def draw(self, num=0, ax=0, result=False):
+        self.draw_graph(ax=ax, num=num)
         nx.draw_networkx_nodes(
             self.G,
             pos=self.positions,
-            node_color=self.color,
+            node_color=self.node_color,
             node_size=self.node_size,
             ax=self.ax[0],
         )
         nx.draw_networkx_edges(
-            self.G, pos=self.positions, edge_color="black", ax=self.ax[0]
+            self.G, pos=self.positions, edge_color=self.edge_color, ax=self.ax[ax]
         )
+        if result:
+            highlight_edges = list(zip(self.path, self.path[1:]))
+            nx.draw_networkx_edges(
+                self.G,
+                pos=self.positions,
+                edgelist=highlight_edges,
+                edge_color="red",
+                ax=self.ax[ax],
+            )
         # nx.draw_networkx_labels(
         #     self.G, pos=self.positions, font_color="black", font_size=10, ax=self.ax[0]
         # )
@@ -503,69 +572,74 @@ class setting:
 
         elif self.plot_pattern == 3:
             # closest_nodeは通信要求を行う最初の端末
-            inside_nodes_list = self.search_path(parent_node=self.closest_node)
+            inside_nodes_list = self.search_path()
             self.inside_nodes, outside_nodes = self.outside_node_detection(
                 inside_nodes_list
             )
+            result, self.path = self.connection_check()
             self.change_node_color(node_ids=outside_nodes, node_color="red")
+            self.draw(result=result)
             for node_id in inside_nodes_list:
                 self.taggle_circle(node_id, visible=True)
             self.draw_graph(ax=1)
-            self.draw_graph(ax=2)
             self.save_image()
+            return result
 
     # 経路の生成を行う
-    def search_path(self, parent_node):
-        queue = [parent_node]
+    def search_path(self):
+        queue = [self.closest_node_1]
         connected_nodes = []
         visited = set()
-        visited.add(parent_node)
-        self.hops[parent_node] = 0
+        self.hops[self.closest_node_1] = 0
         self.count = 0
 
         while queue:
             print(f"{queue}")
             current_node = queue.pop(0)
-            connect_node = []
-            child_nodes = self.circle_detection(current_node)
+            connected_node = []
+            child_nodes = self.circle_detection(current_node, reverse=False)
             connected_nodes.append(current_node)
+            new_list = []
+            # visited.add(current_node)
+
+            count = 0
+            for node_id in child_nodes:
+                if len(self.routing[node_id]["neighbors"]) == 0:
+                    count += 1
+                    new_list.append(node_id)
+            child_nodes = new_list
+            if len(child_nodes) > 4:
+                self.count += 1
+                child_nodes = random.sample(child_nodes, 1)
+            elif len(child_nodes) > 1:
+                child_nodes = random.sample(child_nodes, 2)
+
             i = 0
             for node_id in child_nodes:
                 if i < self.node_limits:
-                    if self.adjacent_node_check(current_node, node_id):
-                        if self.routing_update(node_id, current_node):
-                            self.hop_update(
-                                parent_node=current_node, child_node=node_id
-                            )
-                            if self.edge_deletion_using_mod(child_node=node_id):
-                                self.plot_edge(current_node, node_id)
-                                if node_id not in connected_nodes:
-                                    connect_node.append(node_id)
-                                    i += 1
+                    # if node_id not in visited:
+                    if self.routing_update(node_id, current_node):
+                        # visited.add(node_id)
+                        self.hop_update(parent_node=current_node, child_node=node_id)
+                        self.plot_edge(current_node, node_id)
+                        if node_id not in connected_nodes:
+                            connected_node.append(node_id)
+                            i += 1
                 else:
                     break
-            queue.extend(connect_node)
+            queue.extend(connected_node)
         return connected_nodes
-
-    # h ≡ 0(mod s)の時エッジを削除する関数
-    def edge_deletion_using_mod(self, child_node):
-        if self.hops[child_node] % self.s[child_node] == 0:
-            self.count += 1
-            return False
-        else:
-            return True
 
     # 送信先ノードの隣接ノードを確認して同じノードに接続しないようにする関数(祖先の子供にもいないか確認)
     def adjacent_node_check(self, parent_node, child_node):
-        hops = 10
+        # 実際の環境では下記のhopsを増加させるとスループットが大幅に低下する恐れあり
+        hops = 0
         visited = set()
 
         def loop_detection(node, hops):
             if hops > 0:
                 visited.add(node)
-                child_node_lists = self.circle_detection(node)
-                for node_id in child_node_lists:
-                    # for node_id in self.routing[node].get("neighbors", []):
+                for node_id in self.routing[node].get("neighbors", []):
                     if node_id == child_node:
                         return True
                     if node_id not in visited:
@@ -580,23 +654,6 @@ class setting:
                     return False
         return True
 
-    # 全体の描画 ノード0から順に円内にいるノードと接続を開始する
-    def show(self):
-        print(f"Generating...")
-        self.dir()
-        self.plot_node()
-        self.drawing_connections()
-        # 最終的なself.routingの内容を表示
-        # print(f"(node_id: routing)")
-        # for i in self.positions:
-        #     print(f"({i}: {self.routing[i]})")
-        print(f"Completed!")
-        (x, y) = self.positions[self.closest_node]
-        x = round(x, 2)
-        y = round(y, 2)
-        print(f"center_node: {self.closest_node} (x: {x}, y: {y})")
-        print(f"エッジ削除回数: {self.count}")
-
     def success_rate(self):
         success = 0
         fail = 0
@@ -605,96 +662,100 @@ class setting:
                 success += 1
             else:
                 fail += 1
-        connect_rate = success / self.num_nodes
+        connect_rate = success / (self.num_nodes + self.lightpole)
         return connect_rate, success, fail
 
-    # 全てのノードが連結しているかの確認関数
+    # 任意のノードが接続しているかの確認関数
     def connection_check(self):
         visited = set()  # 訪問済みノードの記録変数
+        parent = {self.closest_node_1: None}
+
         components = []  # 連結されているノードを格納する
 
         # 深さ優先探索関数
-        def dfs(node_id, component):
-            visited.add(node_id)
-            component.append(node_id)
-            for neighbor in self.routing.get(node_id, []):
-                if neighbor not in visited:
-                    dfs(neighbor, component)
+        def bfs(start_node):
+            queue = deque([start_node])
+            while queue:
+                node_id = queue.popleft()
+                if node_id == self.closest_node_2:
+                    return True
+                visited.add(node_id)
+                for neighbor in self.routing[node_id].get("neighbors", []):
+                    if neighbor not in visited and neighbor not in queue:
+                        queue.append(neighbor)
+                        parent[neighbor] = node_id
+            return False
 
         # 探索開始
-        for node_id in self.positions:
-            if node_id not in visited:
-                component = []
-                dfs(node_id, component)
-                components.append(component)
-
-        longest_component = max(components, key=len)
-
-        if len(longest_component) == len(self.positions):
-            return True, []
-        else:
-            isolated_nodes = []
-            for component in components:
-                if component != longest_component:
-                    if len(component) == 1:
-                        isolated_nodes.append(component[0])  # 最初の要素だけ取り出す
-                    else:
-                        isolated_nodes.append(
-                            component
-                        )  # componentに入っている要素を全て取り出す
-            return False, isolated_nodes
+        if bfs(self.closest_node_1):
+            path = []
+            step = self.closest_node_2
+            while step is not None:
+                path.append(step)
+                step = parent[step]
+            path.reverse()
+            return True, path
+        return False, []
 
     # どのノードにも属さないノードを探す関数
     def outside_node_detection(self, inside_nodes_list=None):
         outside_nodes = []
         inside_nodes = []
         for node_id in self.positions:
-            outside_nodes.append(node_id)
+            if node_id < self.num_nodes:
+                outside_nodes.append(node_id)
 
-        if inside_nodes_list is None:
-            for node_id in self.positions:
-                if node_id not in inside_nodes:
-                    around_nodes = self.circle_detection(node_id)
-                    if around_nodes:
-                        if node_id in outside_nodes:
-                            outside_nodes.remove(node_id)
-                        inside_nodes.append(node_id)
-                        for around_node in around_nodes:
-                            if around_node not in inside_nodes:
-                                if around_node in outside_nodes:
-                                    outside_nodes.remove(around_node)
-                                inside_nodes.append(around_node)
-        else:
-            for node_id in inside_nodes_list:
-                around_nodes = self.circle_detection(node_id)
-                if around_nodes:
-                    if node_id in outside_nodes:
-                        outside_nodes.remove(node_id)
-                    inside_nodes.append(node_id)
-                    for around_node in around_nodes:
-                        if around_node not in inside_nodes:
-                            if around_node in outside_nodes:
-                                outside_nodes.remove(around_node)
-                            inside_nodes.append(around_node)
+        for node_id in inside_nodes_list:
+            around_nodes = self.circle_detection(node_id)
+            if around_nodes:
+                if node_id in outside_nodes:
+                    outside_nodes.remove(node_id)
+                inside_nodes.append(node_id)
+                for around_node in around_nodes:
+                    if around_node not in inside_nodes:
+                        if around_node in outside_nodes:
+                            outside_nodes.remove(around_node)
+                        inside_nodes.append(around_node)
 
         return inside_nodes, outside_nodes
 
     def plot_density(self):
-        self.cell_size = self.x_range[1] / self.num_div
-        density_matrix = np.zeros((self.num_div, self.num_div))
-        count = 0
+        node_density = {}
+
         for node_id in set(self.inside_nodes):
-            count += 1
-            (x, y) = self.positions[node_id]
-            grid_x = int(x // self.cell_size)
-            grid_y = int(y // self.cell_size)
-            density_matrix[grid_y][grid_x] += 1
+            count = self.circle_detection(node_id)
+            node_density[node_id] = len(count)
 
         # print(self.inside_nodes)
         # print(np.flipud(density_matrix))
         # density_matrix /= self.cell_size**2
         # print(np.flipud(density_matrix))
-        return density_matrix
+        return node_density
+
+    # 全体の描画 ノード0から順に円内にいるノードと接続を開始する
+    def show(self):
+        print(f"Generating...")
+        self.dir()
+        self.plot_node()
+        result = self.drawing_connections()
+        # 最終的なself.routingの内容を表示
+        # print(f"(node_id: routing)")
+        # for i in self.positions:
+        #     print(f"({i}: {self.routing[i]})")
+        print(f"Completed!")
+        (x_1, y_1) = self.positions[self.closest_node_1]
+        (x_2, y_2) = self.positions[self.closest_node_2]
+        x_1 = round(x_1, 2)
+        x_2 = round(x_2, 2)
+        y_1 = round(y_1, 2)
+        y_2 = round(y_2, 2)
+        print(f"corner_node_1: {self.closest_node_1} (x: {x_1}, y: {y_1})")
+        print(f"corner_node_2: {self.closest_node_2} (x: {x_2}, y: {y_2})")
+        print(f"エッジ削除回数: {self.count}")
+        if result:
+            print(f"接続成功!")
+        else:
+            print(f"接続失敗...")
 
 
 if __name__ == "__main__":
@@ -704,30 +765,28 @@ if __name__ == "__main__":
         plot_pattern,
         num_nodes,
         min_distance,
-        radius,
         multiple,
         num_div,
         dist,
         iterations,
         active_node,
         node_limits,
+        lightpole,
     )
 
     sim_setting.show()
     connect_success_rate, succcess, fail = sim_setting.success_rate()
     connect_success_rate = round(connect_success_rate * 100, 2)
-    connected, isolated = sim_setting.connection_check()
     min_distance = round(min_distance, 2)
+
     print(f"ノード数: {num_nodes}")
+    print(f"電柱本数: {lightpole}")
+    print(f"合計: {num_nodes + lightpole}")
     print(f"最小距離: {min_distance}")
     print(f"接続成功: {succcess}")
     print(f"接続失敗: {fail}")
     print(f"接続成功割合: {connect_success_rate}%")
-    if connected:
-        print(f"全てのノードが連結されました。")
-    else:
-        count = len(isolated) + 1
-        print(f"孤立数: {count}")
+
     end_time = time.time()
     execution_time = end_time - start_time
     rounded_time = round(execution_time, 2)
