@@ -16,23 +16,29 @@ from typing import Any, List, Tuple
 from numpy.typing import NDArray
 
 # パラメータ
-population = 1217  # 千葉県の人口密度(km^2)
+# population = 1930  # 埼玉県の人口密度(km^2)
+# population = 126  # 福島県の人口密度(km^2)
+# population = 232  # 石川県羽咋市の人口密度(km^2)
 holding_ratio = 0.886  # スマホ保有率
-num_nodes = int(population * holding_ratio)  # ノード数
-A = (1 / population) * 1000**2  # 面積(k^2 → m^2　に変換)
+# num_nodes = int(population * holding_ratio)  # ノード数
+num_nodes = 1710  # ノード数(埼玉県)
+# num_nodes = 112  # ノード数(福島県)
+# num_nodes = 206  # ノード数(石川県羽咋市)
+# A = (1 / population) * 1000**2  # 面積(k^2 → m^2　に変換)
 # min_distance = float(np.sqrt(A / np.pi))  # ノード間の最小距離
 min_distance = 2  # ノード間の最小距離
 multiple = 1  # 円の面積の倍数(√n * pi * r^2)
 # 電柱の設置数
 lightpole = 3578 * 10000  # 本
-num_prefecture = 47  # 都道府県
-prefecture_area = 5156  # 県の面積 km^2 (千葉県)
-area_of_japan = 378000
-urban = 0.288
-lightpole = int(lightpole / (num_prefecture * prefecture_area))  # 本数/km^2
+population_of_japan = (
+    12388.7 * 10000
+)  # 人(１億２３８８万７千人)   【2024年（令和6年）8月1日現在（確定値）】https://www.stat.go.jp/data/jinsui/new.html
+lightpole_ratio = population_of_japan / lightpole
+# lightpole = int(population / lightpole_ratio)  # 本数/km^2
+lightpole = 0  # 本数/km^2
 # 0の時は途中経過をgifで表示、1の時は最終結果だけを画像で表示, 2の時は移動なし表示だけ
 plot_pattern = 3
-num_div = 10  # セルの分割数(n*n)
+num_div = 1  # セルの分割数(n*n)
 dist = 50  # 移動距離
 node_limits = 2**2 - 1  # 接続可能ノード数
 iterations = 10  # シミュレーション回数
@@ -81,8 +87,8 @@ class setting:
         self.first_sim = True  # 初回のシミュレーションのフラグ
         self.active_node = active_node  # 動的ノードの保持
         self.node_limits = node_limits
-        self.closest_node_1 = None
-        self.closest_node_2 = None
+        self.start_node = None
+        self.target_node = None
         self.node_color = ["blue"]
         self.lightpole_color = ["green"]
         self.edge_color = ["black"]
@@ -93,8 +99,10 @@ class setting:
         num_nodes = self.num_nodes + self.lightpole
         count = 0
         # ノードの配置
-        closest_distance_1 = 9999  # 初期値を無限大にする
-        closest_distance_2 = 9999  # 初期値を無限大にする
+        start_distance = 9999  # 初期値を無限大にする
+        target_distance = 0  # 初期値を0にする
+        target_max = self.x_range[1] / np.sqrt(2)
+        target_pos = np.random.uniform(500, target_max)
         for node_id in range(num_nodes):
             if count < self.num_nodes:
                 # ノードの設置
@@ -107,30 +115,26 @@ class setting:
                             self.node_y_range[0], self.node_y_range[1]
                         ),
                     )
-                    if all(
-                        np.linalg.norm(np.array(pos) - np.array(p)) >= min_distance
-                        for key, p in self.positions.items()
-                        if isinstance(key, int) and key < self.num_nodes
-                    ):
-                        self.positions[node_id] = pos
-                        (x, y) = pos
-                        distance_1 = (
-                            (x - self.node_x_range[0] - 90) ** 2
-                            + (y - self.node_x_range[0] - 90) ** 2
-                        ) ** 0.5
-                        distance_2 = (
-                            (x - self.node_x_range[1] + 90) ** 2
-                            + (y - self.node_x_range[1] + 90) ** 2
-                        ) ** 0.5
-                        if distance_1 < distance_2:
-                            if distance_1 < closest_distance_1:
-                                closest_distance_1 = distance_1
-                                self.closest_node_1 = node_id
-                        else:
-                            if distance_2 < closest_distance_2:
-                                closest_distance_2 = distance_2
-                                self.closest_node_2 = node_id
-                        break
+                    # if all(
+                    #     np.linalg.norm(np.array(pos) - np.array(p)) >= min_distance
+                    #     for key, p in self.positions.items()
+                    #     if isinstance(key, int) and key < self.num_nodes
+                    # ):
+                    self.positions[node_id] = pos
+                    (x, y) = pos
+                    distance = (
+                        (x - self.x_range[1] / 2) ** 2 + (y - self.x_range[1] / 2) ** 2
+                    ) ** 0.5
+                    if distance < start_distance:
+                        start_distance = distance
+                        self.start_node = node_id
+                    else:
+                        if distance > target_distance:
+                            if distance < target_pos:
+                                target_distance = distance
+                                self.target_node = node_id
+
+                    break
                 count += 1
             else:
                 # 電柱の設置
@@ -150,7 +154,7 @@ class setting:
                         np.linalg.norm(np.array(pos) - np.array(p))
                         >= lightpole_distance
                         for key, p in self.positions.items()
-                        if isinstance(key, int) and key > self.num_nodes
+                        if isinstance(key, int) and key >= self.num_nodes
                     ):
                         self.positions[node_id] = pos
                         break
@@ -232,9 +236,11 @@ class setting:
                 (
                     node_color
                     if node in node_ids
+                    and node != self.start_node
+                    and node != self.target_node
                     else (
-                        "yellow"
-                        if node == self.closest_node_1 or node == self.closest_node_2
+                        "purple"
+                        if node == self.start_node or node == self.target_node
                         else "green" if node >= self.num_nodes else "blue"
                     )
                 )
@@ -405,7 +411,13 @@ class setting:
         elif ax == 1:
             density_matrix = self.plot_density()
             density_values = np.array(list(density_matrix.values()))
-            bin_edges = np.arange(density_values.min(), density_values.max() + 2, 1)
+            if density_values.size == 0:
+                min_values = 0
+                max_values = 3
+            else:
+                min_values = density_values.min()
+                max_values = density_values.max()
+            bin_edges = np.arange(min_values, max_values + 2, 1)
             print(f"グラフ幅: {bin_edges}")
             bars = self.ax[ax].hist(
                 density_values,
@@ -418,15 +430,19 @@ class setting:
             for bar, count in zip(bars[2], bars[0]):
                 height = bar.get_height()
                 label_y_position = (
-                    height + 0.3
-                    if height < 10
+                    height
+                    if height < 5
                     else (
-                        height + 0.5
-                        if height < 15
+                        height + 0.3
+                        if height < 10
                         else (
-                            height + 0.7
-                            if height < 20
-                            else height + 1 if height < 100 else height + 4
+                            height + 0.5
+                            if height < 15
+                            else (
+                                height + 0.7
+                                if height < 20
+                                else height + 1 if height < 100 else height + 4
+                            )
                         )
                     )
                 )  # 高いバーにはラベルをもっと上に
@@ -587,10 +603,10 @@ class setting:
 
     # 経路の生成を行う
     def search_path(self):
-        queue = [self.closest_node_1]
+        queue = [self.start_node]
         connected_nodes = []
         visited = set()
-        self.hops[self.closest_node_1] = 0
+        self.hops[self.start_node] = 0
         self.count = 0
 
         while queue:
@@ -605,10 +621,9 @@ class setting:
             count = 0
             for node_id in child_nodes:
                 if len(self.routing[node_id]["neighbors"]) == 0:
-                    count += 1
                     new_list.append(node_id)
             child_nodes = new_list
-            if len(child_nodes) > 4:
+            if len(child_nodes) > 2:
                 self.count += 1
                 child_nodes = random.sample(child_nodes, 1)
             elif len(child_nodes) > 1:
@@ -668,7 +683,7 @@ class setting:
     # 任意のノードが接続しているかの確認関数
     def connection_check(self):
         visited = set()  # 訪問済みノードの記録変数
-        parent = {self.closest_node_1: None}
+        parent = {self.start_node: None}
 
         components = []  # 連結されているノードを格納する
 
@@ -677,7 +692,7 @@ class setting:
             queue = deque([start_node])
             while queue:
                 node_id = queue.popleft()
-                if node_id == self.closest_node_2:
+                if node_id == self.target_node:
                     return True
                 visited.add(node_id)
                 for neighbor in self.routing[node_id].get("neighbors", []):
@@ -687,9 +702,9 @@ class setting:
             return False
 
         # 探索開始
-        if bfs(self.closest_node_1):
+        if bfs(self.start_node):
             path = []
-            step = self.closest_node_2
+            step = self.target_node
             while step is not None:
                 path.append(step)
                 step = parent[step]
@@ -743,17 +758,18 @@ class setting:
         # for i in self.positions:
         #     print(f"({i}: {self.routing[i]})")
         print(f"Completed!")
-        (x_1, y_1) = self.positions[self.closest_node_1]
-        (x_2, y_2) = self.positions[self.closest_node_2]
+        (x_1, y_1) = self.positions[self.start_node]
+        (x_2, y_2) = self.positions[self.target_node]
         x_1 = round(x_1, 2)
         x_2 = round(x_2, 2)
         y_1 = round(y_1, 2)
         y_2 = round(y_2, 2)
-        print(f"corner_node_1: {self.closest_node_1} (x: {x_1}, y: {y_1})")
-        print(f"corner_node_2: {self.closest_node_2} (x: {x_2}, y: {y_2})")
+        print(f"corner_node_1: {self.start_node} (x: {x_1}, y: {y_1})")
+        print(f"corner_node_2: {self.target_node} (x: {x_2}, y: {y_2})")
         print(f"エッジ削除回数: {self.count}")
         if result:
             print(f"接続成功!")
+            print(f"ホップ数: {len(self.path)-1}")
         else:
             print(f"接続失敗...")
 
