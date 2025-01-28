@@ -239,7 +239,7 @@ class setting:
                     and node != self.start_node
                     and node != self.target_node
                     else (
-                        "purple"
+                        "red"
                         if node == self.start_node or node == self.target_node
                         else "green" if node >= self.num_nodes else "blue"
                     )
@@ -401,13 +401,6 @@ class setting:
             self.ax[ax].grid(
                 True, linestyle="--", linewidth=0.5, zorder=0
             )  # 罫線を表示
-            self.ax[ax].set_xlabel("X軸")
-            self.ax[ax].set_ylabel("Y軸", labelpad=15, rotation="horizontal")
-            if num != 0:
-                self.ax[ax].set_title(f"残シミュレーション回数: {num} 回")
-            else:
-                self.ax[ax].set_title(f"シミュレーション実行結果")
-
         elif ax == 1:
             density_matrix = self.plot_density()
             density_values = np.array(list(density_matrix.values()))
@@ -430,18 +423,38 @@ class setting:
             for bar, count in zip(bars[2], bars[0]):
                 height = bar.get_height()
                 label_y_position = (
-                    height
+                    height + 4
                     if height < 5
                     else (
-                        height + 0.3
+                        height + 4
                         if height < 10
                         else (
-                            height + 0.5
+                            height + 4
                             if height < 15
                             else (
-                                height + 0.7
+                                height + 4
                                 if height < 20
-                                else height + 1 if height < 100 else height + 4
+                                else (
+                                    height + 4
+                                    if height < 30
+                                    else (
+                                        height + 4
+                                        if height < 45
+                                        else (
+                                            height + 4
+                                            if height < 60
+                                            else (
+                                                height + 3.4
+                                                if height < 80
+                                                else (
+                                                    height + 4
+                                                    if height < 100
+                                                    else height + 4.3
+                                                )
+                                            )
+                                        )
+                                    )
+                                )
                             )
                         )
                     )
@@ -456,11 +469,8 @@ class setting:
                     color="black",
                 )
             self.ax[ax].set_xticks(bin_edges[:-1])  # ビンの左端を目盛りに設定
-            self.ax[ax].set_xlabel("濃度 (Density) [node/m^2]")
-            self.ax[ax].set_ylabel("セル数 (Number of Cells) [cell]")
-            self.ax[ax].set_title(
-                "濃度分布のヒストグラム (Histogram of Density Distribution)"
-            )
+            self.ax[ax].set_xlabel("密度 [個/m^2]")
+            self.ax[ax].set_ylabel("その密度の個数 [個]")
             self.ax[ax].grid(True, linestyle="--", linewidth=1, zorder=0)
 
     # ノード・エッジ・ラベルの描画
@@ -593,7 +603,7 @@ class setting:
                 inside_nodes_list
             )
             result, self.path = self.connection_check()
-            self.change_node_color(node_ids=outside_nodes, node_color="red")
+            self.change_node_color(node_ids=outside_nodes, node_color="orange")
             self.draw(result=result)
             for node_id in inside_nodes_list:
                 self.taggle_circle(node_id, visible=True)

@@ -1,4 +1,4 @@
-This is LuaHBTeX, Version 1.18.0 (TeX Live 2024)  (format=lualatex 2025.1.6)  22 JAN 2025 13:21
+This is LuaHBTeX, Version 1.18.0 (TeX Live 2024)  (format=lualatex 2025.1.6)  23 JAN 2025 01:25
  restricted system commands enabled.
 **/Users/suehirohayato/Desktop/Takasaki_Laboratory/graduation_research/program/Research/Paper/pre_paper/pre_draft
 (/Users/suehirohayato/Desktop/Takasaki_Laboratory/graduation_research/program/Research/Paper/pre_paper/pre_draft.tex
@@ -1280,23 +1280,36 @@ File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 LaTeX Font Info:    Trying loading font information for U+msb on input line 145.
  (/usr/local/texlive/2024/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
-)(load cache: extra_lmmono10-regular.luc)
-LaTeX Font Info:    Font shape `JT3/gt/m/n' will be
-(Font)              scaled to size 9.24713pt on input line 192.
-LaTeX Font Info:    Font shape `JY3/gt/m/n' will be
-(Font)              scaled to size 9.24713pt on input line 192.
-
+)
 
 [1{/usr/local/texlive/2024/texmf-var/fonts/map/pdftex/updmap/pdftex.map}
 
 
 ]
+<提案1の結果.png, id=44, 549.033pt x 332.223pt>
+File: 提案1の結果.png Graphic file (type png)
+<use 提案1の結果.png>
+Package luatex.def Info: 提案1の結果.png  used on input line 189.
+(luatex.def)             Requested size: 227.62204pt x 137.7331pt.
+<simulation_result.png, id=45, 797.8608pt x 434.3427pt>
+File: simulation_result.png Graphic file (type png)
+<use simulation_result.png>
+Package luatex.def Info: simulation_result.png  used on input line 196.
+(luatex.def)             Requested size: 227.62204pt x 123.91487pt.
+LaTeX Font Info:    Font shape `JT3/mc/m/n' will be
+(Font)              scaled to size 6.47296pt on input line 197.
+LaTeX Font Info:    Font shape `JT3/mc/m/n' will be
+(Font)              scaled to size 4.62357pt on input line 197.
 
 
+(load cache: extra_lmmono10-regular.luc)
+LaTeX Font Info:    Font shape `JT3/gt/m/n' will be
+(Font)              scaled to size 9.24713pt on input line 222.
+LaTeX Font Info:    Font shape `JY3/gt/m/n' will be
+(Font)              scaled to size 9.24713pt on input line 222.
 
-[2
 
-] (./pre_draft.aux)
+[2<./提案1の結果.png><./simulation_result.png>] (./pre_draft.aux)
  ***********
 LaTeX2e <2024-11-01> patch level 1
 L3 programming layer <2024-12-09>
@@ -1304,19 +1317,19 @@ L3 programming layer <2024-12-09>
 )
 
 Here is how much of LuaTeX's memory you used:
- 29212 strings out of 475554
- 382234,1373583 words of node,token memory allocated
- 1234 words of node memory still in use:
-   10 hlist, 2 vlist, 5 rule, 2 glue, 4 kern, 1 glyph, 258 attribute, 64 glue_spec, 34 attribute_list, 2 write, 13 user_defined, 2 pdf_action nodes
-   avail lists: 1:41,2:96761,3:1307,4:660,5:123,6:104,7:14252,8:83,9:6563,10:25,11:42
- 51381 multiletter control sequences out of 65536+600000
+ 29238 strings out of 475554
+ 382255,1373583 words of node,token memory allocated
+ 1208 words of node memory still in use:
+   10 hlist, 2 vlist, 5 rule, 2 glue, 4 kern, 1 glyph, 246 attribute, 64 glue_spec, 33 attribute_list, 2 write, 13 user_defined, 2 pdf_action nodes
+   avail lists: 1:36,2:100725,3:1304,4:643,5:103,6:100,7:14916,8:83,9:6896,10:25,11:37
+ 51403 multiletter control sequences out of 65536+600000
  52 fonts using 37196199 bytes
  125i,10n,128p,8944b,711s stack positions out of 10000i,1000n,20000p,200000b,200000s
-</usr/local/texlive/2024/texmf-dist/fonts/opentype/public/lm/lmmono10-regular.otf></usr/local/texlive/2024/texmf-dist/fonts/opentype/public/haranoaji/HaranoAjiGothic-Medium.otf></usr/local/texlive/2024/texmf-dist/fonts/opentype/public/lm/lmroman10-regular.otf></usr/local/texlive/2024/texmf-dist/fonts/opentype/public/lm/lmroman12-regular.otf></usr/local/texlive/2024/texmf-dist/fonts/opentype/public/haranoaji/HaranoAjiMincho-Regular.otf></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb>
-Output written on pre_draft.pdf (2 pages, 123603 bytes).
+</usr/local/texlive/2024/texmf-dist/fonts/opentype/public/lm/lmmono10-regular.otf></usr/local/texlive/2024/texmf-dist/fonts/opentype/public/haranoaji/HaranoAjiGothic-Medium.otf></usr/local/texlive/2024/texmf-dist/fonts/opentype/public/lm/lmroman10-regular.otf></usr/local/texlive/2024/texmf-dist/fonts/opentype/public/lm/lmroman12-regular.otf></usr/local/texlive/2024/texmf-dist/fonts/opentype/public/haranoaji/HaranoAjiMincho-Regular.otf></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb>
+Output written on pre_draft.pdf (2 pages, 474260 bytes).
 
-PDF statistics: 133 PDF objects out of 1000 (max. 8388607)
- 111 compressed objects within 2 object streams
+PDF statistics: 140 PDF objects out of 1000 (max. 8388607)
+ 113 compressed objects within 2 object streams
  23 named destinations out of 1000 (max. 131072)
- 120 words of extra memory for PDF output out of 10000 (max. 100000000)
+ 104 words of extra memory for PDF output out of 10000 (max. 100000000)
 
