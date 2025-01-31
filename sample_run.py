@@ -78,7 +78,8 @@ class setting:
             np.sqrt(multiple) * self.ble_radius
         )  # 各ノード半径を格納する配列
         self.circles = {}  # 各ノードの円の格納配列
-        self.fig, self.ax = plt.subplots(1, 2, figsize=(14, 7))
+        self.fig, self.ax = plt.subplots(figsize=(7, 7))
+        # self.fig, self.ax = plt.subplots(1, 2, figsize=(14, 7))
         self.plot_pattern = plot_pattern
         self.num_div = num_div
         self.dist = dist
@@ -199,7 +200,8 @@ class setting:
                 )
 
             self.circles[node_id] = circle
-            self.ax[0].add_patch(circle)
+            self.ax.add_patch(circle)
+            # self.ax[0].add_patch(circle)
             circle.set_visible(False)
 
     # ノードの描画
@@ -331,7 +333,8 @@ class setting:
     # 現在のプロットを全て消去
     def clear_plot(self):
         self.G.clear()
-        self.ax[0].cla()
+        self.ax.cla()
+        # self.ax[0].cla()
         self.circles.clear()
 
     # ノードをランダムに動かす (一つのノードのみ移動)
@@ -390,17 +393,26 @@ class setting:
     def draw_graph(self, ax=0, num=0):
         if ax == 0:
             div_steps = self.x_range[1] / self.num_div
-            self.ax[ax].set_xlim(self.x_range)
-            self.ax[ax].set_ylim(self.y_range)
-            self.ax[ax].set_xticks(
+            self.ax.set_xlim(self.x_range)
+            self.ax.set_ylim(self.y_range)
+            self.ax.set_xticks(
                 np.arange(self.x_range[0], self.x_range[1], step=div_steps)
             )
-            self.ax[ax].set_yticks(
+            self.ax.set_yticks(
                 np.arange(self.y_range[0], self.y_range[1], step=div_steps)
             )
-            self.ax[ax].grid(
-                True, linestyle="--", linewidth=0.5, zorder=0
-            )  # 罫線を表示
+            self.ax.grid(True, linestyle="--", linewidth=0.5, zorder=0)  # 罫線を表示
+            # self.ax[ax].set_xlim(self.x_range)
+            # self.ax[ax].set_ylim(self.y_range)
+            # self.ax[ax].set_xticks(
+            #     np.arange(self.x_range[0], self.x_range[1], step=div_steps)
+            # )
+            # self.ax[ax].set_yticks(
+            #     np.arange(self.y_range[0], self.y_range[1], step=div_steps)
+            # )
+            # self.ax[ax].grid(
+            #     True, linestyle="--", linewidth=0.5, zorder=0
+            # )  # 罫線を表示
         elif ax == 1:
             density_matrix = self.plot_density()
             density_values = np.array(list(density_matrix.values()))
@@ -481,10 +493,11 @@ class setting:
             pos=self.positions,
             node_color=self.node_color,
             node_size=self.node_size,
-            ax=self.ax[0],
+            ax=self.ax,
+            # ax=self.ax[0],
         )
         nx.draw_networkx_edges(
-            self.G, pos=self.positions, edge_color=self.edge_color, ax=self.ax[ax]
+            self.G, pos=self.positions, edge_color=self.edge_color, ax=self.ax
         )
         if result:
             highlight_edges = list(zip(self.path, self.path[1:]))
@@ -493,7 +506,7 @@ class setting:
                 pos=self.positions,
                 edgelist=highlight_edges,
                 edge_color="red",
-                ax=self.ax[ax],
+                ax=self.ax,
             )
         # nx.draw_networkx_labels(
         #     self.G, pos=self.positions, font_color="black", font_size=10, ax=self.ax[0]
@@ -607,7 +620,7 @@ class setting:
             self.draw(result=result)
             for node_id in inside_nodes_list:
                 self.taggle_circle(node_id, visible=True)
-            self.draw_graph(ax=1)
+            # self.draw_graph(ax=1)
             self.save_image()
             return result
 

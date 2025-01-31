@@ -1,4 +1,4 @@
-This is LuaHBTeX, Version 1.18.0 (TeX Live 2024)  (format=lualatex 2025.1.6)  23 JAN 2025 01:25
+This is LuaHBTeX, Version 1.18.0 (TeX Live 2024)  (format=lualatex 2025.1.6)  25 JAN 2025 12:48
  restricted system commands enabled.
 **/Users/suehirohayato/Desktop/Takasaki_Laboratory/graduation_research/program/Research/Paper/pre_paper/pre_draft
 (/Users/suehirohayato/Desktop/Takasaki_Laboratory/graduation_research/program/Research/Paper/pre_paper/pre_draft.tex
@@ -1065,6 +1065,25 @@ Package: array 2024/10/17 v2.6g Tabular extension package (FMi)
 \extratabsurround=\skip62
 \backup@length=\skip63
 \ar@cellbox=\box134
+) (/usr/local/texlive/2024/texmf-dist/tex/latex/booktabs/booktabs.sty
+Package: booktabs 2020/01/12 v1.61803398 Publication quality tables
+\heavyrulewidth=\dimen322
+\lightrulewidth=\dimen323
+\cmidrulewidth=\dimen324
+\belowrulesep=\dimen325
+\belowbottomsep=\dimen326
+\aboverulesep=\dimen327
+\abovetopsep=\dimen328
+\cmidrulesep=\dimen329
+\cmidrulekern=\dimen330
+\defaultaddspace=\dimen331
+\@cmidla=\count361
+\@cmidlb=\count362
+\@aboverulesep=\dimen332
+\@belowrulesep=\dimen333
+\@thisruleclass=\count363
+\@lastruleclass=\count364
+\@thisrulewidth=\dimen334
 ) (/usr/local/texlive/2024/texmf-dist/tex/latex/diagbox/diagbox.sty
 Package: diagbox 2020/02/09 v2.3 Making table heads with diagonal lines
  (/usr/local/texlive/2024/texmf-dist/tex/latex/pict2e/pict2e.sty
@@ -1078,65 +1097,65 @@ Package pict2e Info: Driver file for pict2e: p2e-luatex.def on input line 114.
 File: p2e-luatex.def 2016/02/05 v0.1u Driver-dependant file (RN,HjG,JT)
 )
 \pIIe@GRAPH=\toks49
-\@arclen=\dimen322
-\@arcrad=\dimen323
-\pIIe@tempdima=\dimen324
-\pIIe@tempdimb=\dimen325
-\pIIe@tempdimc=\dimen326
-\pIIe@tempdimd=\dimen327
-\pIIe@tempdime=\dimen328
-\pIIe@tempdimf=\dimen329
+\@arclen=\dimen335
+\@arcrad=\dimen336
+\pIIe@tempdima=\dimen337
+\pIIe@tempdimb=\dimen338
+\pIIe@tempdimc=\dimen339
+\pIIe@tempdimd=\dimen340
+\pIIe@tempdime=\dimen341
+\pIIe@tempdimf=\dimen342
 ) (/usr/local/texlive/2024/texmf-dist/tex/latex/tools/calc.sty
 Package: calc 2023/07/08 v4.3 Infix arithmetic (KKT,FJ)
-\calc@Acount=\count361
-\calc@Bcount=\count362
-\calc@Adimen=\dimen330
-\calc@Bdimen=\dimen331
+\calc@Acount=\count365
+\calc@Bcount=\count366
+\calc@Adimen=\dimen343
+\calc@Bdimen=\dimen344
 \calc@Askip=\skip64
 \calc@Bskip=\skip65
 LaTeX Info: Redefining \setlength on input line 80.
 LaTeX Info: Redefining \addtolength on input line 81.
-\calc@Ccount=\count363
+\calc@Ccount=\count367
 \calc@Cskip=\skip66
 )
 \diagbox@boxa=\box135
 \diagbox@boxb=\box136
 \diagbox@boxm=\box137
-\diagbox@wd=\dimen332
-\diagbox@ht=\dimen333
-\diagbox@insepl=\dimen334
-\diagbox@insepr=\dimen335
-\diagbox@outsepl=\dimen336
-\diagbox@outsepr=\dimen337
+\diagbox@wd=\dimen345
+\diagbox@ht=\dimen346
+\diagbox@insepl=\dimen347
+\diagbox@insepr=\dimen348
+\diagbox@outsepl=\dimen349
+\diagbox@outsepr=\dimen350
 ) (/usr/local/texlive/2024/texmf-dist/tex/luatex/luatexja/patches/lltjp-array.sty
 Package: lltjp-array 2024-07-21 Patch to array for LuaTeX-ja
 ) (./pre_draft.aux)
 \openout1 = pre_draft.aux
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 67.
-LaTeX Font Info:    ... okay on input line 67.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 67.
-LaTeX Font Info:    ... okay on input line 67.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 67.
-LaTeX Font Info:    ... okay on input line 67.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 67.
-LaTeX Font Info:    ... okay on input line 67.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 67.
-LaTeX Font Info:    ... okay on input line 67.
-LaTeX Font Info:    Checking defaults for TU/lmr/m/n on input line 67.
-LaTeX Font Info:    ... okay on input line 67.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 67.
-LaTeX Font Info:    ... okay on input line 67.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 67.
-LaTeX Font Info:    ... okay on input line 67.
-LaTeX Font Info:    Checking defaults for JY3/mc/m/n on input line 67.
-LaTeX Font Info:    ... okay on input line 67.
-LaTeX Font Info:    Checking defaults for JT3/mc/m/n on input line 67.
-LaTeX Font Info:    ... okay on input line 67.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 67.
-LaTeX Font Info:    ... okay on input line 67.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 67.
-LaTeX Font Info:    ... okay on input line 67.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 68.
+LaTeX Font Info:    ... okay on input line 68.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 68.
+LaTeX Font Info:    ... okay on input line 68.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 68.
+LaTeX Font Info:    ... okay on input line 68.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 68.
+LaTeX Font Info:    ... okay on input line 68.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 68.
+LaTeX Font Info:    ... okay on input line 68.
+LaTeX Font Info:    Checking defaults for TU/lmr/m/n on input line 68.
+LaTeX Font Info:    ... okay on input line 68.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 68.
+LaTeX Font Info:    ... okay on input line 68.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 68.
+LaTeX Font Info:    ... okay on input line 68.
+LaTeX Font Info:    Checking defaults for JY3/mc/m/n on input line 68.
+LaTeX Font Info:    ... okay on input line 68.
+LaTeX Font Info:    Checking defaults for JT3/mc/m/n on input line 68.
+LaTeX Font Info:    ... okay on input line 68.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 68.
+LaTeX Font Info:    ... okay on input line 68.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 68.
+LaTeX Font Info:    ... okay on input line 68.
 
 *geometry* driver: auto-detecting
 *geometry* detected driver: luatex
@@ -1179,68 +1198,68 @@ Package fontspec Info:
 
 \symlegacymaths=\mathgroup7
 LaTeX Font Info:    Overwriting symbol font `legacymaths' in version `bold'
-(Font)                  OT1/cmr/m/n --> OT1/cmr/bx/n on input line 67.
-LaTeX Font Info:    Redeclaring math accent \acute on input line 67.
-LaTeX Font Info:    Redeclaring math accent \grave on input line 67.
-LaTeX Font Info:    Redeclaring math accent \ddot on input line 67.
-LaTeX Font Info:    Redeclaring math accent \tilde on input line 67.
-LaTeX Font Info:    Redeclaring math accent \bar on input line 67.
-LaTeX Font Info:    Redeclaring math accent \breve on input line 67.
-LaTeX Font Info:    Redeclaring math accent \check on input line 67.
-LaTeX Font Info:    Redeclaring math accent \hat on input line 67.
-LaTeX Font Info:    Redeclaring math accent \dot on input line 67.
-LaTeX Font Info:    Redeclaring math accent \mathring on input line 67.
-LaTeX Font Info:    Redeclaring math symbol \Gamma on input line 67.
-LaTeX Font Info:    Redeclaring math symbol \Delta on input line 67.
-LaTeX Font Info:    Redeclaring math symbol \Theta on input line 67.
-LaTeX Font Info:    Redeclaring math symbol \Lambda on input line 67.
-LaTeX Font Info:    Redeclaring math symbol \Xi on input line 67.
-LaTeX Font Info:    Redeclaring math symbol \Pi on input line 67.
-LaTeX Font Info:    Redeclaring math symbol \Sigma on input line 67.
-LaTeX Font Info:    Redeclaring math symbol \Upsilon on input line 67.
-LaTeX Font Info:    Redeclaring math symbol \Phi on input line 67.
-LaTeX Font Info:    Redeclaring math symbol \Psi on input line 67.
-LaTeX Font Info:    Redeclaring math symbol \Omega on input line 67.
-LaTeX Font Info:    Redeclaring math symbol \mathdollar on input line 67.
-LaTeX Font Info:    Redeclaring symbol font `operators' on input line 67.
+(Font)                  OT1/cmr/m/n --> OT1/cmr/bx/n on input line 68.
+LaTeX Font Info:    Redeclaring math accent \acute on input line 68.
+LaTeX Font Info:    Redeclaring math accent \grave on input line 68.
+LaTeX Font Info:    Redeclaring math accent \ddot on input line 68.
+LaTeX Font Info:    Redeclaring math accent \tilde on input line 68.
+LaTeX Font Info:    Redeclaring math accent \bar on input line 68.
+LaTeX Font Info:    Redeclaring math accent \breve on input line 68.
+LaTeX Font Info:    Redeclaring math accent \check on input line 68.
+LaTeX Font Info:    Redeclaring math accent \hat on input line 68.
+LaTeX Font Info:    Redeclaring math accent \dot on input line 68.
+LaTeX Font Info:    Redeclaring math accent \mathring on input line 68.
+LaTeX Font Info:    Redeclaring math symbol \Gamma on input line 68.
+LaTeX Font Info:    Redeclaring math symbol \Delta on input line 68.
+LaTeX Font Info:    Redeclaring math symbol \Theta on input line 68.
+LaTeX Font Info:    Redeclaring math symbol \Lambda on input line 68.
+LaTeX Font Info:    Redeclaring math symbol \Xi on input line 68.
+LaTeX Font Info:    Redeclaring math symbol \Pi on input line 68.
+LaTeX Font Info:    Redeclaring math symbol \Sigma on input line 68.
+LaTeX Font Info:    Redeclaring math symbol \Upsilon on input line 68.
+LaTeX Font Info:    Redeclaring math symbol \Phi on input line 68.
+LaTeX Font Info:    Redeclaring math symbol \Psi on input line 68.
+LaTeX Font Info:    Redeclaring math symbol \Omega on input line 68.
+LaTeX Font Info:    Redeclaring math symbol \mathdollar on input line 68.
+LaTeX Font Info:    Redeclaring symbol font `operators' on input line 68.
 LaTeX Font Info:    Encoding `OT1' has changed to `TU' for symbol font
-(Font)              `operators' in the math version `normal' on input line 67.
+(Font)              `operators' in the math version `normal' on input line 68.
 LaTeX Font Info:    Overwriting symbol font `operators' in version `normal'
-(Font)                  OT1/cmr/m/n --> TU/lmr/m/n on input line 67.
+(Font)                  OT1/cmr/m/n --> TU/lmr/m/n on input line 68.
 LaTeX Font Info:    Encoding `OT1' has changed to `TU' for symbol font
-(Font)              `operators' in the math version `bold' on input line 67.
+(Font)              `operators' in the math version `bold' on input line 68.
 LaTeX Font Info:    Overwriting symbol font `operators' in version `bold'
-(Font)                  OT1/cmr/bx/n --> TU/lmr/m/n on input line 67.
+(Font)                  OT1/cmr/bx/n --> TU/lmr/m/n on input line 68.
 LaTeX Font Info:    Overwriting symbol font `operators' in version `normal'
-(Font)                  TU/lmr/m/n --> TU/lmr/m/n on input line 67.
+(Font)                  TU/lmr/m/n --> TU/lmr/m/n on input line 68.
 LaTeX Font Info:    Overwriting math alphabet `\mathit' in version `normal'
-(Font)                  OT1/cmr/m/it --> TU/lmr/m/it on input line 67.
+(Font)                  OT1/cmr/m/it --> TU/lmr/m/it on input line 68.
 LaTeX Font Info:    Overwriting math alphabet `\mathbf' in version `normal'
-(Font)                  OT1/cmr/bx/n --> TU/lmr/b/n on input line 67.
+(Font)                  OT1/cmr/bx/n --> TU/lmr/b/n on input line 68.
 LaTeX Font Info:    Overwriting math alphabet `\mathsf' in version `normal'
-(Font)                  OT1/cmss/m/n --> TU/lmss/m/n on input line 67.
+(Font)                  OT1/cmss/m/n --> TU/lmss/m/n on input line 68.
 LaTeX Font Info:    Overwriting math alphabet `\mathtt' in version `normal'
-(Font)                  OT1/cmtt/m/n --> TU/lmtt/m/n on input line 67.
+(Font)                  OT1/cmtt/m/n --> TU/lmtt/m/n on input line 68.
 LaTeX Font Info:    Overwriting symbol font `operators' in version `bold'
-(Font)                  TU/lmr/m/n --> TU/lmr/b/n on input line 67.
+(Font)                  TU/lmr/m/n --> TU/lmr/b/n on input line 68.
 LaTeX Font Info:    Overwriting math alphabet `\mathit' in version `bold'
-(Font)                  OT1/cmr/bx/it --> TU/lmr/b/it on input line 67.
+(Font)                  OT1/cmr/bx/it --> TU/lmr/b/it on input line 68.
 LaTeX Font Info:    Overwriting math alphabet `\mathsf' in version `bold'
-(Font)                  OT1/cmss/bx/n --> TU/lmss/b/n on input line 67.
+(Font)                  OT1/cmss/bx/n --> TU/lmss/b/n on input line 68.
 LaTeX Font Info:    Overwriting math alphabet `\mathtt' in version `bold'
-(Font)                  OT1/cmtt/m/n --> TU/lmtt/b/n on input line 67.
+(Font)                  OT1/cmtt/m/n --> TU/lmtt/b/n on input line 68.
 (/usr/local/texlive/2024/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
-\scratchcounter=\count364
-\scratchdimen=\dimen338
+\scratchcounter=\count368
+\scratchdimen=\dimen351
 \scratchbox=\box138
-\nofMPsegments=\count365
-\nofMParguments=\count366
+\nofMPsegments=\count369
+\nofMParguments=\count370
 \everyMPshowfont=\toks50
-\MPscratchCnt=\count367
-\MPscratchDim=\dimen339
-\MPnumerator=\count368
-\makeMPintoPDFobject=\count369
+\MPscratchCnt=\count371
+\MPscratchDim=\dimen352
+\MPnumerator=\count372
+\makeMPintoPDFobject=\count373
 \everyMPtoPDFconversion=\toks51
 ) (/usr/local/texlive/2024/texmf-dist/tex/latex/epstopdf-pkg/epstopdf-base.sty
 Package: epstopdf-base 2020-01-24 v2.11 Base part for package epstopdf
@@ -1248,68 +1267,64 @@ Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 48
  (/usr/local/texlive/2024/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg
 File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Live
 ))
-Package hyperref Info: Link coloring OFF on input line 67.
+Package hyperref Info: Link coloring OFF on input line 68.
 Package caption Info: Begin \AtBeginDocument code.
 Package caption Info: End \AtBeginDocument code.
 (load cache: extra_lmroman17-regular.luc)
 LaTeX Font Info:    Font shape `JT3/mc/m/n' will be
-(Font)              scaled to size 15.19254pt on input line 92.
+(Font)              scaled to size 15.19254pt on input line 93.
 LaTeX Font Info:    Font shape `JY3/mc/m/n' will be
-(Font)              scaled to size 15.19254pt on input line 92.
+(Font)              scaled to size 15.19254pt on input line 93.
 (load cache: extra_lmroman12-regular.luc)
 LaTeX Font Info:    Font shape `JT3/mc/m/n' will be
-(Font)              scaled to size 13.16685pt on input line 92.
+(Font)              scaled to size 13.16685pt on input line 93.
 LaTeX Font Info:    Font shape `JY3/mc/m/n' will be
-(Font)              scaled to size 13.16685pt on input line 92.
+(Font)              scaled to size 13.16685pt on input line 93.
 LaTeX Font Info:    Font shape `JT3/mc/m/n' will be
-(Font)              scaled to size 11.14117pt on input line 92.
+(Font)              scaled to size 11.14117pt on input line 93.
 LaTeX Font Info:    Font shape `JY3/mc/m/n' will be
-(Font)              scaled to size 11.14117pt on input line 92.
+(Font)              scaled to size 11.14117pt on input line 93.
 
 
-LaTeX Font Info:    Calculating math sizes for size <9.12994> on input line 145.
+LaTeX Font Info:    Calculating math sizes for size <9.12994> on input line 156.
 (load cache: extra_lmroman7-regular.luc)(load cache: extra_lmroman5-regular.luc)
 LaTeX Font Info:    Font shape `JY3/mc/m/n' will be
-(Font)              scaled to size 6.47296pt on input line 145.
+(Font)              scaled to size 6.47296pt on input line 156.
 LaTeX Font Info:    Font shape `JY3/mc/m/n' will be
-(Font)              scaled to size 4.62357pt on input line 145.
-LaTeX Font Info:    Trying loading font information for U+msa on input line 145.
+(Font)              scaled to size 4.62357pt on input line 156.
+LaTeX Font Info:    Trying loading font information for U+msa on input line 156.
 (/usr/local/texlive/2024/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying loading font information for U+msb on input line 145.
+LaTeX Font Info:    Trying loading font information for U+msb on input line 156.
  (/usr/local/texlive/2024/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
+<シミュレーションの様子.png, id=12, 406.1574pt x 403.9893pt>
+File: シミュレーションの様子.png Graphic file (type png)
+<use シミュレーションの様子.png>
+Package luatex.def Info: シミュレーションの様子.png  used on input line 190.
+(luatex.def)             Requested size: 184.9429pt x 183.95103pt.
+<提案1の結果.png, id=14, 641.232pt x 408.435pt>
+File: 提案1の結果.png Graphic file (type png)
+<use 提案1の結果.png>
+Package luatex.def Info: 提案1の結果.png  used on input line 200.
+(luatex.def)             Requested size: 227.62204pt x 144.98608pt.
+
 
 [1{/usr/local/texlive/2024/texmf-var/fonts/map/pdftex/updmap/pdftex.map}
 
 
 ]
-<提案1の結果.png, id=44, 549.033pt x 332.223pt>
-File: 提案1の結果.png Graphic file (type png)
-<use 提案1の結果.png>
-Package luatex.def Info: 提案1の結果.png  used on input line 189.
-(luatex.def)             Requested size: 227.62204pt x 137.7331pt.
-<simulation_result.png, id=45, 797.8608pt x 434.3427pt>
-File: simulation_result.png Graphic file (type png)
-<use simulation_result.png>
-Package luatex.def Info: simulation_result.png  used on input line 196.
-(luatex.def)             Requested size: 227.62204pt x 123.91487pt.
-LaTeX Font Info:    Font shape `JT3/mc/m/n' will be
-(Font)              scaled to size 6.47296pt on input line 197.
-LaTeX Font Info:    Font shape `JT3/mc/m/n' will be
-(Font)              scaled to size 4.62357pt on input line 197.
-
 
 (load cache: extra_lmmono10-regular.luc)
 LaTeX Font Info:    Font shape `JT3/gt/m/n' will be
-(Font)              scaled to size 9.24713pt on input line 222.
+(Font)              scaled to size 9.24713pt on input line 243.
 LaTeX Font Info:    Font shape `JY3/gt/m/n' will be
-(Font)              scaled to size 9.24713pt on input line 222.
+(Font)              scaled to size 9.24713pt on input line 243.
 
 
-[2<./提案1の結果.png><./simulation_result.png>] (./pre_draft.aux)
+[2<./シミュレーションの様子.png><./提案1の結果.png>] (./pre_draft.aux)
  ***********
 LaTeX2e <2024-11-01> patch level 1
 L3 programming layer <2024-12-09>
@@ -1317,19 +1332,19 @@ L3 programming layer <2024-12-09>
 )
 
 Here is how much of LuaTeX's memory you used:
- 29238 strings out of 475554
- 382255,1373583 words of node,token memory allocated
- 1208 words of node memory still in use:
-   10 hlist, 2 vlist, 5 rule, 2 glue, 4 kern, 1 glyph, 246 attribute, 64 glue_spec, 33 attribute_list, 2 write, 13 user_defined, 2 pdf_action nodes
-   avail lists: 1:36,2:100725,3:1304,4:643,5:103,6:100,7:14916,8:83,9:6896,10:25,11:37
- 51403 multiletter control sequences out of 65536+600000
+ 29310 strings out of 475554
+ 382242,1373583 words of node,token memory allocated
+ 1292 words of node memory still in use:
+   10 hlist, 2 vlist, 5 rule, 2 glue, 4 kern, 1 glyph, 282 attribute, 64 glue_spec, 36 attribute_list, 2 write, 13 user_defined, 3 pdf_action nodes
+   avail lists: 1:45,2:92598,3:1403,4:716,5:124,6:120,7:13745,8:83,9:6331,10:25,11:34
+ 51464 multiletter control sequences out of 65536+600000
  52 fonts using 37196199 bytes
- 125i,10n,128p,8944b,711s stack positions out of 10000i,1000n,20000p,200000b,200000s
-</usr/local/texlive/2024/texmf-dist/fonts/opentype/public/lm/lmmono10-regular.otf></usr/local/texlive/2024/texmf-dist/fonts/opentype/public/haranoaji/HaranoAjiGothic-Medium.otf></usr/local/texlive/2024/texmf-dist/fonts/opentype/public/lm/lmroman10-regular.otf></usr/local/texlive/2024/texmf-dist/fonts/opentype/public/lm/lmroman12-regular.otf></usr/local/texlive/2024/texmf-dist/fonts/opentype/public/haranoaji/HaranoAjiMincho-Regular.otf></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb>
-Output written on pre_draft.pdf (2 pages, 474260 bytes).
+ 125i,10n,128p,8944b,626s stack positions out of 10000i,1000n,20000p,200000b,200000s
+</usr/local/texlive/2024/texmf-dist/fonts/opentype/public/lm/lmmono10-regular.otf></usr/local/texlive/2024/texmf-dist/fonts/opentype/public/lm/lmroman10-regular.otf></usr/local/texlive/2024/texmf-dist/fonts/opentype/public/lm/lmroman12-regular.otf></usr/local/texlive/2024/texmf-dist/fonts/opentype/public/haranoaji/HaranoAjiMincho-Regular.otf></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb>
+Output written on pre_draft.pdf (2 pages, 456130 bytes).
 
-PDF statistics: 140 PDF objects out of 1000 (max. 8388607)
- 113 compressed objects within 2 object streams
- 23 named destinations out of 1000 (max. 131072)
- 104 words of extra memory for PDF output out of 10000 (max. 100000000)
+PDF statistics: 141 PDF objects out of 1000 (max. 8388607)
+ 117 compressed objects within 2 object streams
+ 29 named destinations out of 1000 (max. 131072)
+ 112 words of extra memory for PDF output out of 10000 (max. 100000000)
 

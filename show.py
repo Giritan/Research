@@ -10,6 +10,7 @@ import shutil  # ファイル・ディレクトリ操作に使用
 import time
 import random
 from collections import deque
+import queue
 
 # 山口くん↓
 from typing import Any, List, Tuple
@@ -18,12 +19,10 @@ from numpy.typing import NDArray
 # パラメータ
 # population = 1930  # 埼玉県の人口密度(km^2)
 # population = 126  # 福島県の人口密度(km^2)
-# population = 232  # 石川県羽咋市の人口密度(km^2)
 holding_ratio = 0.886  # スマホ保有率
 # num_nodes = int(population * holding_ratio)  # ノード数
-num_nodes = 1710  # ノード数(埼玉県)
-# num_nodes = 112  # ノード数(福島県)
-# num_nodes = 206  # ノード数(石川県羽咋市)
+# num_nodes = 1710  # ノード数(埼玉県)
+num_nodes = 112  # ノード数(福島県)
 # A = (1 / population) * 1000**2  # 面積(k^2 → m^2　に変換)
 # min_distance = float(np.sqrt(A / np.pi))  # ノード間の最小距離
 min_distance = 2  # ノード間の最小距離
@@ -35,12 +34,12 @@ population_of_japan = (
 )  # 人(１億２３８８万７千人)   【2024年（令和6年）8月1日現在（確定値）】https://www.stat.go.jp/data/jinsui/new.html
 lightpole_ratio = population_of_japan / lightpole
 # lightpole = int(population / lightpole_ratio)  # 本数/km^2
-lightpole = 0  # 本数/km^2
+lightpole = int(1 / 0.05**2)  # 本数/km^2
 # 0の時は途中経過をgifで表示、1の時は最終結果だけを画像で表示, 2の時は移動なし表示だけ
 plot_pattern = 3
 num_div = 1  # セルの分割数(n*n)
 dist = 50  # 移動距離
-node_limits = 2**2 - 1  # 接続可能ノード数
+node_limits = 2**2  # 接続可能ノード数
 iterations = 10  # シミュレーション回数
 active_node = 5
 
@@ -51,8 +50,9 @@ class setting:
     y_range = (0, 1000)  # y軸
     node_x_range = (10, 990)  # ノード用x軸
     node_y_range = (10, 990)  # ノード用y軸
-    lightpole_distance = (30, 40)  # 電柱間の最小距離
+    lightpole_distance = 50  # 電柱間の最小距離
     ble_radius = 30  # ノードを中心とした円の半径(接続半径) BLEを想定
+    pole_radius = 100  # ノードを中心とした円の半径(接続半径) BLEを想定
     outputdir_image = "simulation_image"  # imageの保存先
     outputdir_gif = "simulation_gif"  # gifの保存先
 
@@ -93,73 +93,104 @@ class setting:
         self.lightpole_color = ["green"]
         self.edge_color = ["black"]
         self.lightpole = lightpole
+        self.lightpole_path = []
         self.setting_nodes(min_distance)
+        self.sub_setting()
+        self.setting_poles()
+        self.generate_circle()
 
+    # ノードの設置
     def setting_nodes(self, min_distance):
-        num_nodes = self.num_nodes + self.lightpole
-        count = 0
-        # ノードの配置
+        # スタートノードとターゲットノードの選定
         start_distance = 9999  # 初期値を無限大にする
         target_distance = 0  # 初期値を0にする
         target_max = self.x_range[1] / np.sqrt(2)
         target_pos = np.random.uniform(500, target_max)
-        for node_id in range(num_nodes):
-            if count < self.num_nodes:
-                # ノードの設置
-                while True:
-                    pos = (
-                        np.random.default_rng().uniform(
-                            self.node_x_range[0], self.node_x_range[1]
-                        ),
-                        np.random.default_rng().uniform(
-                            self.node_y_range[0], self.node_y_range[1]
-                        ),
-                    )
-                    # if all(
-                    #     np.linalg.norm(np.array(pos) - np.array(p)) >= min_distance
-                    #     for key, p in self.positions.items()
-                    #     if isinstance(key, int) and key < self.num_nodes
-                    # ):
-                    self.positions[node_id] = pos
-                    (x, y) = pos
-                    distance = (
-                        (x - self.x_range[1] / 2) ** 2 + (y - self.x_range[1] / 2) ** 2
-                    ) ** 0.5
-                    if distance < start_distance:
-                        start_distance = distance
-                        self.start_node = node_id
-                    else:
-                        if distance > target_distance:
-                            if distance < target_pos:
-                                target_distance = distance
-                                self.target_node = node_id
-
-                    break
-                count += 1
-            else:
-                # 電柱の設置
-                lightpole_distance = np.random.default_rng().uniform(
-                    self.lightpole_distance[0], self.lightpole_distance[1]
+        for node_id in range(self.num_nodes):
+            while True:
+                pos = (
+                    np.random.default_rng().uniform(
+                        self.node_x_range[0], self.node_x_range[1]
+                    ),
+                    np.random.default_rng().uniform(
+                        self.node_y_range[0], self.node_y_range[1]
+                    ),
                 )
-                while True:
-                    pos = (
-                        np.random.default_rng().uniform(
-                            self.node_x_range[0], self.node_x_range[1]
-                        ),
-                        np.random.default_rng().uniform(
-                            self.node_y_range[0], self.node_y_range[1]
-                        ),
-                    )
-                    if all(
-                        np.linalg.norm(np.array(pos) - np.array(p))
-                        >= lightpole_distance
-                        for key, p in self.positions.items()
-                        if isinstance(key, int) and key >= self.num_nodes
-                    ):
-                        self.positions[node_id] = pos
-                        break
-                count += 1
+                # if all(
+                #     np.linalg.norm(np.array(pos) - np.array(p)) >= min_distance
+                #     for key, p in self.positions.items()
+                #     if isinstance(key, int) and key < self.num_nodes
+                # ):
+                self.positions[node_id] = pos
+                (x, y) = pos
+                distance = (
+                    (x - self.x_range[1] / 2) ** 2 + (y - self.x_range[1] / 2) ** 2
+                ) ** 0.5
+                if distance < start_distance:
+                    start_distance = distance
+                    self.start_node = node_id
+                else:
+                    if distance > target_distance:
+                        if distance < target_pos:
+                            target_distance = distance
+                            self.target_node = node_id
 
+                break
+
+    # 電柱の設置
+    def setting_poles(self):
+        # 適当に一つ配置する
+        pos = (
+            np.random.default_rng().uniform(self.node_x_range[0], self.node_x_range[1]),
+            np.random.default_rng().uniform(self.node_y_range[0], self.node_y_range[1]),
+        )
+        self.positions[self.num_nodes] = pos
+        self.routing[self.num_nodes] = {"neighbors": [], "parent": None}
+        self.plot_node(node_id=self.num_nodes)
+        pole_queue = queue.Queue()
+        pole_queue.put((self.num_nodes, pos))
+        num_nodes = self.num_nodes
+        num_nodes += 1
+        # 初めのポールから
+        while not pole_queue.empty() and num_nodes < self.lightpole + self.num_nodes:
+            current_id, (x, y) = pole_queue.get()
+            base_angles = [0, 60, 120, 180, 240, 300]
+            placed_poles = np.random.choice([1, 2])
+            while placed_poles > 0 and base_angles:
+                chosen_angles = np.random.choice(base_angles)
+                if chosen_angles in base_angles:
+                    base_angles.remove(chosen_angles)
+                rad = np.radians(chosen_angles)
+
+                new_x = x + self.pole_radius * np.cos(rad)
+                new_y = y + self.pole_radius * np.sin(rad)
+                new_x = round(new_x, 2)
+                new_y = round(new_y, 2)
+                new_pos = (new_x, new_y)
+
+                if (
+                    new_pos
+                    not in [
+                        pos
+                        for key, pos in self.positions.items()
+                        if self.num_nodes <= key < self.lightpole + self.num_nodes
+                    ]
+                    and new_x < self.x_range[1]
+                    and new_x > self.x_range[0]
+                    and new_y < self.y_range[1]
+                    and new_y > self.y_range[0]
+                ):
+                    self.lightpole_path.append((current_id, num_nodes))
+                    self.routing[num_nodes] = {"neighbors": [], "parent": None}
+                    self.positions[num_nodes] = new_pos
+                    self.routing_update(child_node=num_nodes, parent_node=current_id)
+                    self.plot_node(node_id=num_nodes)
+                    self.plot_edge(current_id, num_nodes)
+                    pole_queue.put((num_nodes, new_pos))
+                    num_nodes += 1
+                    placed_poles -= 1
+
+    def sub_setting(self):
         self.routing = {i: {"neighbors": [], "parent": None} for i in self.positions}
         self.hops = {i: None for i in self.positions}
 
@@ -171,8 +202,6 @@ class setting:
                     self.plot_edge(i, node_id)
                     self.routing_update(node_id, i)
                     self.draw()
-
-        self.generate_circle()
 
     # 生成済みのノードの円の描画の準備
     def generate_circle(self):
@@ -190,7 +219,7 @@ class setting:
             else:
                 circle = patches.Circle(
                     (x, y),
-                    radius=self.ble_radius,
+                    radius=self.pole_radius,
                     edgecolor="lightgreen",
                     facecolor="lightgreen",
                     linestyle="solid",  # デフォルト
@@ -272,12 +301,26 @@ class setting:
         parent_pos = np.array(self.positions[parent_node])
         children_in_radius = []
 
-        for node_id, pos in self.positions.items():
-            if node_id != parent_node:  # 自分自身は除く
-                child_pos = np.array(pos)
-                distance = np.linalg.norm(parent_pos - child_pos)
-                if distance <= self.ble_radius:
-                    children_in_radius.append((node_id, distance))
+        if parent_node < self.num_nodes:
+            for node_id, pos in self.positions.items():
+                if node_id != parent_node:  # 自分自身は除く
+                    child_pos = np.array(pos)
+                    distance = np.linalg.norm(parent_pos - child_pos)
+                    if distance <= self.ble_radius:
+                        children_in_radius.append((node_id, distance))
+        else:
+            for node_id, pos in self.positions.items():
+                if node_id != parent_node:  # 自分自身は除く
+                    if node_id < self.num_nodes:
+                        child_pos = np.array(pos)
+                        distance = np.linalg.norm(parent_pos - child_pos)
+                        if distance <= self.ble_radius:
+                            children_in_radius.append((node_id, distance))
+                    else:
+                        child_pos = np.array(pos)
+                        distance = np.linalg.norm(parent_pos - child_pos)
+                        if distance <= self.pole_radius:
+                            children_in_radius.append((node_id, distance))
 
         # 距離でソートし、ノード ID だけのリストに変換
         # reverse = falseの時 昇順(近い順)/ trueの時 降順(遠い順)
@@ -476,6 +519,13 @@ class setting:
         nx.draw_networkx_edges(
             self.G, pos=self.positions, edge_color=self.edge_color, ax=self.ax[ax]
         )
+        nx.draw_networkx_edges(
+            self.G,
+            pos=self.positions,
+            edgelist=self.lightpole_path,
+            edge_color="pink",
+            ax=self.ax[ax],
+        )
         if result:
             highlight_edges = list(zip(self.path, self.path[1:]))
             nx.draw_networkx_edges(
@@ -618,12 +668,11 @@ class setting:
             new_list = []
             # visited.add(current_node)
 
-            count = 0
             for node_id in child_nodes:
                 if len(self.routing[node_id]["neighbors"]) == 0:
                     new_list.append(node_id)
             child_nodes = new_list
-            if len(child_nodes) > 5:
+            if len(child_nodes) > 10:
                 self.count += 1
                 child_nodes = random.sample(child_nodes, 1)
             if len(child_nodes) > 1:
@@ -723,14 +772,15 @@ class setting:
         for node_id in inside_nodes_list:
             around_nodes = self.circle_detection(node_id)
             if around_nodes:
-                if node_id in outside_nodes:
-                    outside_nodes.remove(node_id)
-                inside_nodes.append(node_id)
-                for around_node in around_nodes:
-                    if around_node not in inside_nodes:
-                        if around_node in outside_nodes:
-                            outside_nodes.remove(around_node)
-                        inside_nodes.append(around_node)
+                if node_id < self.num_nodes:
+                    if node_id in outside_nodes:
+                        outside_nodes.remove(node_id)
+                    inside_nodes.append(node_id)
+                    for around_node in around_nodes:
+                        if around_node not in inside_nodes:
+                            if around_node in outside_nodes:
+                                outside_nodes.remove(around_node)
+                            inside_nodes.append(around_node)
 
         return inside_nodes, outside_nodes
 
@@ -749,7 +799,9 @@ class setting:
 
     # 全体の描画 ノード0から順に円内にいるノードと接続を開始する
     def show(self):
+        print(f"{self.lightpole_path}")
         print(f"Generating...")
+
         self.dir()
         self.plot_node()
         result = self.drawing_connections()
