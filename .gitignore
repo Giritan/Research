@@ -1,0 +1,26 @@
+.venv
+simulation_image
+.DS_Store
+test_code.py
+space.py
+main.synctex.gz
+main.pdf
+Exposed_terminal_problem.drawio
+Hidden_terminal_problem.drawio
+pre_draft.aux
+pre_draft.log
+pre_draft 2.fdb_latexmk
+pre_draft.synctex.gz
+提案1の結果.png
+TB-05末廣隼人.pdf
+graduation_thesis.aux
+graduation_thesis.log
+graduation_thesis.toc
+graduation_thesis.synctex.gz
+template.aux
+template.log
+template.pdf
+template.tex
+template.toc
+sample_run.py
+sample_result.png
