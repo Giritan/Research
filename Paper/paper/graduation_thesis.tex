@@ -18,42 +18,45 @@
 \usepackage{amssymb}
 \usepackage[colorlinks=true, linkcolor=black]{hyperref}
 \usepackage{tocloft}
-\usepackage[english, japanese]{babel}
 \usepackage{indentfirst}
 \usepackage{tikz} % カスタム点線用
-\usepackage{authblk} % 著者・所属パッケージ
 \usepackage{here}
 \usepackage{caption}
 \usepackage{bookmark}
+\usepackage{multicol}
+\usepackage{multirow}
+\usepackage{flushend}
+\usepackage{subfig}
+\usepackage{threeparttable}
+\usepackage{enumitem}
+\usepackage{url}
 
-% 目次の設定
-\renewcommand{\cftsecfont}{\normalsize} % セクションのフォントサイズ
-\renewcommand{\cftsubsecfont}{\normalsize} % サブセクションのフォントサイズ
-\renewcommand{\cftsubsubsecfont}{\normalsize} % サブサブセクションのフォントサイズ
-\renewcommand{\cftsecaftersnum}{.}  % セクション番号の後にドット
-\renewcommand{\cftsecpagefont}{\normalfont} % 章番号のページ番号フォントサイズ
 
+\setlength{\baselineskip}{14pt}
+\setlength{\parindent}{1\zw}
 
-% セクション見出しのカスタマイズ
-\titleformat{\section}
-  {\Large}
-  {\thesection.}
-  {1em}{}
+\titleformat{\section}{\large\bfseries}{\thesection.}{1\zw}{}
+\titleformat{\subsection}{\large\bfseries}{\thesubsection.}{1\zw}{}
+\titleformat{\subsubsection}{\large\bfseries}{\thesubsubsection.}{1\zw}{}
 
-\titleformat{\subsection}
-  {\fontsize{11pt}{11pt}}
-  {\thesubsection}
-  {1em}{}
+\setcounter{tocdepth}{3}
+\makeatletter
+\renewcommand{\numberline}[1]{#1.~}
+\renewcommand{\cftsecleader}{\cftdotfill{\cftdotsep}}
+\renewcommand{\cftsubsecleader}{\hfill}
+\renewcommand{\cftsubsubsecleader}{\hfill}
+\cftpagenumbersoff{subsection}
+\cftpagenumbersoff{subsubsection}
+\makeatother
 
-\titleformat{\subsubsection}
-  {\fontsize{11pt}{11pt}}
-  {\thesubsubsection}
-  {1em}{}
+\DeclareCaptionFont{designatedFont}{\fontsize{11pt}{14pt}\selectfont}
+\captionsetup{font=designatedFont}
 
-  \setlength{\parindent}{1em}
-
+%---ここから中身---------------------------------------------------------------------------------------
 \begin{document}
+\fontsize{11pt}{14pt}\selectfont
 
+%---表紙---------------------------------------------------------------------------------------
 \thispagestyle{empty}
 \begin{center}
 \pagenumbering{gobble}  %ページ番号をカウントしない
@@ -77,19 +80,25 @@
 
 \end{center}
 
-\newpage
+%---目次------------------------------------------------------------------------------------------
+\clearpage  %新しいページの追加
 \thispagestyle{empty}
 \tableofcontents  %目次の自動生成　目次をクリックするとその章，節に飛ぶことができる
 
-%はじめに
-\newpage
+%---はじめに---------------------------------------------------------------------------------------
+\clearpage
 \pagenumbering{arabic}
 \section{はじめに}
+・日本では地震をはじめ多くの自然災害が発生しており，災害時には通信ネットワークが使えなくなる可能性がある．
+そこで，アドホックネットワークを活用し地域限定ながら被災状況の把握や情報伝達を可能とする研究が行われている．
+・本研究では，人口密度に応じた経路構築方法を考案し，その効果をシミュレーションを用いて検証した．
+・近年，Bluetoothの開発が活発に行われており，従来のBluetoothよりも低消費電力で
 
 
-%理論
-\newpage  %新しいページを追加
+%---理論---------------------------------------------------------------------------------------
+\clearpage
 \section{理論}
+\subsection{Bluetoothの規格について}
 \subsection{アドホックネットワークの技術的課題}
 \subsubsection{隠れ端末問題}
 隠れ端末問題とは、図1のようにノードAとCがノードBに対して通信を行うとき、ノードAとCはお互いの存在が隠れてしまい、
@@ -101,7 +110,7 @@
 \end{figure}
 
 \subsubsection{さらし端末問題}
-さらし端末問題とは、図2のようにノードAがDと通信を行なっているときノードBは端末Cと通信ができそうだが、
+さらし端末問題\cite{人口密度}とは、図2のようにノードAがDと通信を行なっているときノードBは端末Cと通信ができそうだが、
 ノードAがDと通信を行なっているため周辺にいる他ノードは通信の抑制がされてしまい、
 伝送速度や通信品質の低下が発生してしまう問題である。%
 \begin{figure}[H]
@@ -110,19 +119,23 @@
   \caption{さらし端末問題}
 \end{figure}
 
-%提案手法
-\newpage
+%---提案手法---------------------------------------------------------------------------------------
+\clearpage
 \section{提案手法}
 
-%結果
-\newpage
+%---結果---------------------------------------------------------------------------------------
+\clearpage
 \section{結果}
 
-%考察とまとめ
-\newpage
+%---考察とまとめ---------------------------------------------------------------------------------------
+\clearpage
 \section{考察とまとめ}
 
-%参考文献
-\newpage
-\section{参考文献}
+%---参考文献---------------------------------------------------------------------------------------
+\clearpage
+\addcontentsline{toc}{section}{参考文献}
+\bibliography{arxiv}
+\bibliographystyle{junsrt}
+
+
 \end{document}
