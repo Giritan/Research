@@ -17,10 +17,13 @@ graduation_thesis.aux
 graduation_thesis.log
 graduation_thesis.toc
 graduation_thesis.synctex.gz
+graduation_thesis.blg
+graduation_thesis.bbl
 template.aux
 template.log
 template.pdf
 template.tex
 template.toc
+template.out
 sample_run.py
 sample_result.png
