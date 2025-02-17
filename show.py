@@ -18,7 +18,7 @@ from numpy.typing import NDArray
 
 # パラメータ
 # num_nodes = 1710  # ノード数(埼玉県)
-num_nodes = 1600  # ノード数(埼玉県)
+num_nodes = 6000  # ノード数(埼玉県)
 # num_nodes = 112  # ノード数(福島県)
 # num_nodes = 5715  # ノード数(東京都)
 min_distance = 2  # ノード間の最小距離
@@ -641,7 +641,7 @@ class setting:
                         new_list.append(node_id)
                 else:
                     lightpole_list.append(node_id)
-            if len(new_list) > 5:
+            if len(new_list) > 18:
                 new_list = random.sample(new_list, 1)
             elif len(new_list) > 1:
                 new_list = random.sample(new_list, 2)
